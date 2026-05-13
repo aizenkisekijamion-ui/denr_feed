@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS Map | NGP Palawan</title>
+
+    <!-- CSS Dependencies -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/main.css">
+
+    <style>
+        .map-layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .map-sidebar {
+            width: 320px;
+            background: white;
+            z-index: 500;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .layer-control {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border: 1px solid #eee;
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .layer-item:hover {
+            background: #f5f5f5;
+        }
+
+        .layer-item.active {
+            border-color: var(--primary-color);
+            background: #e8f5e9;
+        }
+
+        .legend-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="map-layout">
+        <!-- Map Sidebar -->
+        <aside class="map-sidebar">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #eee; background: var(--primary-dark); color: white;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size: 1.2rem;">GIS Layers</h3>
+                    <a href="dashboard.html" title="Back to Dashboard" style="color:white;"><i
+                            class="fas fa-times"></i></a>
+                </div>
+                <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.5rem;">Palawan Region Control</div>
+            </div>
+
+            <div class="layer-control">
+                <h4
+                    style="font-size: 0.9rem; margin-bottom: 1rem; text-transform: uppercase; color: var(--text-light);">
+                    Overlays</h4>
+
+                <label class="layer-item active">
+                    <div style="display:flex; align-items:center;">
+                        <span class="legend-indicator" style="background: #2E7D32;"></span>
+                        <span>NGP Sites 2024</span>
+                    </div>
+                    <input type="checkbox" checked onchange="toggleLayer('ngp2024')">
+                </label>
+
+                <label class="layer-item">
+                    <div style="display:flex; align-items:center;">
+                        <span class="legend-indicator" style="background: #FFC107;"></span>
+                        <span>Nursery Locations</span>
+                    </div>
+                    <input type="checkbox" onchange="toggleLayer('nurseries')">
+                </label>
+
+                <label class="layer-item">
+                    <div style="display:flex; align-items:center;">
+                        <span class="legend-indicator" style="background: #D32F2F;"></span>
+                        <span>Protected Areas</span>
+                    </div>
+                    <input type="checkbox" onchange="toggleLayer('protected')">
+                </label>
+
+                <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 1rem;">Actions</h4>
+                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;"
+                        onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-upload"></i> Upload Shapefile
+                    </button>
+                    <input type="file" id="fileInput" hidden accept=".zip,.json,.geojson">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="map.flyTo([9.7392, 118.7350], 9)">
+                        <i class="fas fa-crosshairs"></i> Reset View
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Area -->
+        <main class="map-container">
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <!-- JS Dependencies -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map centered on Palawan
+        const map = L.map('map').setView([9.7392, 118.7350], 8);
+
+        // Tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Mock Data Layers
+        const ngpSites = [
+            { lat: 9.74, lng: 118.74, name: "Site A - Narra", area: "500ha" },
+            { lat: 10.15, lng: 119.20, name: "Site B - Roxas", area: "350ha" },
+            { lat: 8.95, lng: 117.80, name: "Site C - Brookes Point", area: "600ha" }
+        ];
+
+        const nurseries = [
+            { lat: 9.80, lng: 118.70, name: "Central Nursery" },
+            { lat: 10.20, lng: 119.25, name: "North Propagator" }
+        ];
+
+        let layerGroups = {
+            ngp2024: L.layerGroup().addTo(map),
+            nurseries: L.layerGroup(),
+            protected: L.layerGroup()
+        };
+
+        // Initialize Markers
+        ngpSites.forEach(site => {
+            L.circle([site.lat, site.lng], {
+                color: '#2E7D32',
+                fillColor: '#4CAF50',
+                fillOpacity: 0.5,
+                radius: 5000
+            }).bindPopup(`<b>${site.name}</b><br>Area: ${site.area}`).addTo(layerGroups.ngp2024);
+        });
+
+        nurseries.forEach(nurs => {
+            L.marker([nurs.lat, nurs.lng]).bindPopup(`<b>${nurs.name}</b>`).addTo(layerGroups.nurseries);
+        });
+
+        // Toggle Function
+        function toggleLayer(layerName) {
+            if (map.hasLayer(layerGroups[layerName])) {
+                map.removeLayer(layerGroups[layerName]);
+            } else {
+                map.addLayer(layerGroups[layerName]);
+            }
+        }
+
+        // File Upload Simulation
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            alert("File selected! In a production environment, this would parse the Shapefile/GeoJSON and render it on the map using 'leaflet-shapefile' or 'proj4'. For now, this confirms the UI flow works.");
+        });
+
+    </script>
+
+</body>
+
+</html>

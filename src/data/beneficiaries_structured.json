@@ -1,0 +1,470 @@
+{
+  "name": "PALAWAN",
+  "children": [
+    {
+      "name": "CENRO BROOKE'S POINT",
+      "beneficiaries": []
+    },
+    {
+      "name": "CENRO CORON",
+      "beneficiaries": []
+    },
+    {
+      "name": "CENRO PPC",
+      "beneficiaries": []
+    },
+    {
+      "name": "CENRO QUEZON",
+      "beneficiaries": [
+        {
+          "no": 20,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 21,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 22,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 23,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 24,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 25,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 26,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        },
+        {
+          "no": 27,
+          "name": "",
+          "area": "",
+          "landbank": "",
+          "location": "",
+          "orsNumber": "",
+          "orsDate": "",
+          "contractCost": "",
+          "obligatedAmount": "",
+          "totalDisbursement": "",
+          "retentionFee": "",
+          "balance": "",
+          "difference": "",
+          "mobi": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing1": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing2": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          },
+          "billing3": {
+            "number": "",
+            "date": "",
+            "sr": "",
+            "gross": "",
+            "rf": "",
+            "lessRf": "",
+            "bir": "",
+            "net": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "CENRO ROXAS",
+      "beneficiaries": []
+    },
+    {
+      "name": "CENRO TAYTAY",
+      "beneficiaries": []
+    }
+  ]
+}

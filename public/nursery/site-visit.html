@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- VERSION: PREMIUM MODAL + OVER LOGIC CLEANED -->
+    <meta name="version" content="13.1.0">
+    <title>Site Visit 2025 | NGP Palawan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="scripts/db-service.js"></script>
+    <script src="scripts/data-model.js"></script>
+
+    <style>
+        .layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-pane {
+            margin-left: 280px;
+            flex: 1;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            width: calc(100% - 280px);
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* FLEX SHRINK FIXES */
+        .page-header {
+            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .stats-container {
+            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .visit-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .visit-stats .card {
+            flex: 1;
+            min-width: 180px;
+            max-width: 240px;
+            padding: 0.75rem !important;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .visit-stats .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .visit-stats .card i {
+            font-size: 1rem !important;
+            width: 30px !important;
+            height: 30px !important;
+        }
+
+        .visit-stats .card .stat-val {
+            font-size: 1.1rem !important;
+        }
+
+        .sheet-tabs-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            flex-shrink: 0;
+            overflow-x: auto;
+            padding: 0 4px;
+            height: 35px;
+        }
+
+        .sheet-tab {
+            padding: 0 8px;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #616161;
+            transition: all 0.2s;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            width: 150px;
+            max-width: 200px;
+            min-width: 120px;
+            font-size: 0.8rem;
+        }
+
+        .sheet-tab .tab-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            text-align: left;
+        }
+
+        .sheet-tab:hover {
+            background: #eeeeee;
+        }
+
+        .sheet-tab.active {
+            background: white;
+            color: var(--primary-color);
+            height: 32px;
+            margin-top: -2px;
+            z-index: 10;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid var(--primary-color);
+        }
+
+        .controls-bar {
+            flex-shrink: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 4px 0 0;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            min-height: 40px;
+        }
+
+        .sheet-container {
+            flex: 1;
+            overflow: auto;
+            background: white;
+            box-shadow: var(--shadow-sm);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sheet-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: auto;
+            flex: 1;
+        }
+
+        .sheet-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #EEE;
+        }
+
+        .sheet-table th {
+            background: #EEE;
+            padding: 6px 8px;
+            height: 30px;
+            text-align: center;
+            border-right: 1px solid #CCC;
+            border-bottom: 2px solid #BBB;
+            font-weight: 700;
+            color: #333;
+            white-space: nowrap;
+            vertical-align: middle;
+            font-size: 0.75rem;
+        }
+
+        .sheet-table td {
+            padding: 4px 6px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            min-height: 24px;
+            white-space: nowrap;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: cell;
+            font-size: 0.75rem;
+        }
+
+        tr.month-header-row td {
+            padding: 0 !important;
+            border: none !important;
+            height: 22px !important;
+            background: #f1f8e9;
+            overflow: visible;
+        }
+
+        .month-header-content {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            height: 22px;
+            line-height: 22px;
+            font-size: 0.7rem;
+            border-bottom: 1px solid #c8e6c9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .sheet-table td:focus {
+            background-color: #e3f2fd;
+            outline: 2px solid #2196F3;
+            outline-offset: -2px;
+            z-index: 5;
+            position: relative;
+        }
+
+        #updateIndicator {
+            display: none;
+        }
+
+        .edit-active-block #updateIndicator {
+            display: block;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            width: 450px;
+            max-width: 90%;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-overlay.show .modal-box {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .delete-tab-warning {
+            border-left: 5px solid #ef5350;
+        }
+
+        .modal-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-confirm-delete {
+            background: #ef5350;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #d32f2f;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #555;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 36px;
+            height: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: #c6c6c6;
+            outline: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch:checked {
+            background: var(--primary-color);
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch:checked::before {
+            transform: translateX(18px);
+        }
+
+        .month-header-content i {
+            cursor: pointer;
+            color: #2E7D32;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+            margin-left: 12px;
+        }
+
+        .month-header-content i:hover {
+            color: #1b5e20;
+        }
+
+        /* MODERN FORM STYLES */
+        .modern-form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.2s, box-shadow 0.2s;
+            background: #fafafa;
+        }
+
+        .modern-form-control:focus {
+            border-color: var(--primary-color);
+            background: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .modern-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .modal-action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .modal-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-action-btn.primary {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+        }
+
+        .modal-action-btn.secondary {
+            background: white;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        .modal-action-btn.accent {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingText">Loading Data...</div>
+    </div>
+    <div id="updateIndicator"
+        style="position:fixed; bottom:20px; right:20px; background: #E8F5E9; color: #1B5E20; padding: 10px 15px; font-size: 0.8rem; border-radius: 8px; pointer-events: none; opacity: 1; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #C8E6C9; z-index: 5000;">
+        <i class="fas fa-clipboard"></i> <b>Paste Mode Active:</b> Select a cell & Press Ctrl+V
+    </div>
+
+    <!-- GENERIC CHART MODAL -->
+    <div id="chartModal" class="modal-overlay" style="z-index: 10001;">
+        <div class="modal-box" style="width: 95%; max-width: 900px; height: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 id="chartTitle" style="margin:0; text-align:left; color:#333;">Analytics</h3>
+                <button onclick="closeChartModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="position: relative; height: 480px; width: 100%;">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRILLDOWN MODAL -->
+    <div id="drilldownModal" class="modal-overlay" style="z-index: 10003;">
+        <div class="modal-box" style="width: 500px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 id="drilldownTitle">Detail Breakdown</h3>
+                <button onclick="closeDrilldownModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div id="drilldownList"
+                style="max-height: 400px; overflow-y: auto; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                <!-- DYNAMIC LIST -->
+            </div>
+            <div style="margin-top:20px; text-align: right; font-weight: 700; font-size: 1.1rem; color: #2e7d32;"
+                id="drilldownTotal">
+                TOTAL: 0
+            </div>
+        </div>
+    </div>
+
+    <div id="rowTooltip" class="custom-tooltip"
+        style="position:fixed; background:#333; color:white; padding:8px; border-radius:4px; font-size:0.7rem; display:none; pointer-events:none; z-index:9999; max-width: 300px;">
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <div style="font-size: 2.5rem; color: #ef5350; margin-bottom: 20px;"><i
+                    class="fas fa-exclamation-circle"></i></div>
+            <h3>Delete this Row?</h3>
+            <p style="color:#666; margin-bottom: 0;">This action cannot be undone.</p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDelete()">Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WARNING MODAL -->
+    <div id="warningModal" class="modal-overlay" style="z-index: 10002;">
+        <div class="modal-box" style="border-left: 5px solid #FF9800;">
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <div style="font-size: 2rem; color: #FF9800;"><i class="fas fa-hand-paper"></i></div>
+                <div>
+                    <h3 style="color:#E65100; margin-bottom: 10px;">Insufficient Space</h3>
+                    <p id="warningText"
+                        style="color:#555; text-align:left; margin:0; font-size:0.95rem; white-space: pre-wrap; line-height: 1.5;">
+                    </p>
+                </div>
+            </div>
+            <div class="modal-actions" style="justify-content: flex-end;">
+                <button class="modal-action-btn primary" onclick="closeWarningModal()">Okay, I understand</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSERT PERIOD MODAL -->
+    <div id="insertMonthModal" class="modal-overlay" style="z-index: 10002;">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 20px;">Insert New Period</h3>
+            <div style="margin-bottom: 25px;">
+                <label class="modern-label">Name of Period / Month</label>
+                <input type="text" id="newMonthName" class="modern-form-control"
+                    placeholder='e.g., "Audit March" or "Site Visit Q1"'>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="modal-action-btn accent" onclick="executeInsertMonth('after')">
+                    <i class="fas fa-arrow-down"></i> Insert AFTER Current Block
+                </button>
+                <button class="modal-action-btn secondary" onclick="executeInsertMonth('before')">
+                    <i class="fas fa-arrow-up"></i> Insert BEFORE Current Block
+                </button>
+                <button class="btn-cancel" onclick="closeInsertMonthModal()"
+                    style="margin-top: 10px; width: 100%;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARGETS MODAL -->
+    <div id="targetsModal" class="modal-overlay">
+        <div class="modal-box" style="width: 400px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">Monthly Targets</h3>
+                <button onclick="closeTargetsModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <p
+                style="font-size:0.9rem; color:#666; margin-bottom:20px; background:#f5f5f5; padding: 10px; border-radius: 6px;">
+                Setting targets for: <br><strong style="color:var(--primary-color);" id="targetSheetLabel"></strong>
+            </p>
+            <div id="targetInputs" style="margin-bottom: 25px;"></div>
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeTargetsModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="saveTargets()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD TAB MODAL -->
+    <div id="addTabModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Add New Sheet</h3>
+            <div style="margin-bottom: 20px;">
+                <label class="modern-label">Sheet Name</label>
+                <input type="text" id="newTabName" class="modern-form-control" placeholder="e.g. Narra">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeAddTabModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="executeAddTab()">Create Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE TAB MODAL -->
+    <div id="deleteTabModal" class="modal-overlay">
+        <div class="modal-box delete-tab-warning">
+            <h3 style="color:#c62828;"><i class="fas fa-exclamation-triangle"></i> Delete Sheet?</h3>
+            <p>Are you sure you want to delete <strong id="delTabName"></strong>?</p>
+            <p style="color:#d32f2f; font-size:0.9rem; background: #ffebee; padding: 10px; border-radius: 4px;">
+                This will permanently remove all data in this sheet.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteTabModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDeleteTab()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD COLUMN MODAL -->
+    <div id="addColumnModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Add New Column</h3>
+            <div style="margin-bottom: 20px;">
+                <label class="modern-label">Column Name</label>
+                <input type="text" id="newColName" class="modern-form-control" placeholder="e.g. GPS Coordinates">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeAddColumnModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="executeAddColumn()">Add Column</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE COLUMN MODAL -->
+    <div id="deleteColModal" class="modal-overlay">
+        <div class="modal-box delete-tab-warning">
+            <h3 style="color:#c62828;">Delete Column?</h3>
+            <p>Are you sure you want to delete column <strong id="delColName"></strong>?</p>
+            <p style="color:#d32f2f; font-size:0.9rem; background: #ffebee; padding: 10px; border-radius: 4px;">
+                This will delete data in this column across <b>ALL SHEETS</b> in this module.
+            </p>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDeleteColModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDeleteColumn()">Delete Column</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>NGP Palawan</h3>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item"> <a href="dashboard.html" class="nav-link"> <i class="fas fa-th-large"></i>
+                        Dashboard </a> </li>
+                <li class="nav-item"> <a href="financial.html" class="nav-link"> <i class="fas fa-coins"></i> Financial
+                    </a> </li>
+                <li class="nav-item"> <a href="#" class="nav-link active"> <i class="fas fa-clipboard-check"></i> Site
+                        Visit 2025 </a> </li>
+
+                <li class="nav-item"> <a href="maintenance-protection.html" class="nav-link"> <i
+                            class="fas fa-shield-alt"></i>
+                        Maintenance & Protection </a> </li>
+                <li class="nav-item"> <a href="forest-nursery.html" class="nav-link"> <i class="fas fa-warehouse"></i>
+                        Forest Nursery 2025 </a> </li>
+                <li class="nav-item"> <a href="gis-map.html" class="nav-link"> <i class="fas fa-map-marked-alt"></i> GIS
+                        Map </a> </li>
+                <li class="nav-item"> <a href="photos.html" class="nav-link"> <i class="fas fa-images"></i> Geo-Photos
+                    </a> </li>
+                <li class="nav-item"> <a href="drive-files.html" class="nav-link"> <i class="fab fa-google-drive"></i>
+                        Drive Files </a> </li>
+            </ul>
+        </aside>
+
+        <main class="main-pane" id="mainPane">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="font-size: 1.25rem;">Site Visit 2025</h2>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="window.print()"
+                        style="margin-right: 0.5rem; padding: 4px 10px; font-size: 0.8rem;"><i class="fas fa-print"></i>
+                        Print</button>
+                    <button class="btn btn-outline" onclick="resetAllData()"
+                        style="color: #d32f2f; border-color: #d32f2f; padding: 4px 10px; font-size: 0.8rem;"><i
+                            class="fas fa-trash-alt"></i> Clear / Reset</button>
+                </div>
+            </div>
+
+            <div class="stats-container visit-stats">
+                <div class="card" onclick="openAnalytics('sites')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#e8f5e9; color:#2e7d32; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-walking"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Total Sites <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('sites')"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="totalVisits">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" onclick="openAnalytics('seedlings')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#e1f5fe; color:#0288d1; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Seedlings <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('seedlings')"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="totalSeedlings">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" onclick="openAnalytics('survival')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#ffebee; color:#c62828; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Survivor % <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('survival')"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="avgSurvival">-</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" onclick="openAnalytics('contract')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#fff3e0; color:#ef6c00; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Contract Cost <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('contract')"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700; white-space:nowrap;" id="totalContract">0
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-tabs-container" id="tabContainer"></div>
+
+            <div class="controls-bar">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="checkbox" id="editMode" class="toggle-switch" onchange="toggleEditMode()">
+                    <label for="editMode" style="font-weight:600; cursor:pointer; font-size: 0.8rem;">Edit Mode</label>
+                    <div style="width:1px; height:20px; background:#ddd; margin:0 1rem;"></div>
+                    <span id="editStatusText" style="color:var(--text-light); font-size:0.75rem;"> Modify/Paste Data
+                    </span>
+                    <button class="btn btn-outline"
+                        style="margin-left: 1rem; padding: 6px 12px; font-size: 0.75rem; border-radius: 4px;"
+                        onclick="openTargetsModal()"> <i class="fas fa-cog"></i> Settings </button>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--primary-color); font-weight:600;"> Sheet: <span
+                        id="activeSheetLabel" style="text-decoration:underline;">PENRO Palawan</span> </div>
+            </div>
+
+            <div class="sheet-container" tabindex="0" id="pasteZone" style="outline:none;">
+                <table class="sheet-table" id="mainTable">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="sheetBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+        // Defaults
+        const DEFAULT_SHEETS = ["PENRO Palawan", "Puerto Princesa", "Coron", "Roxas", "Brookes Point", "Taytay", "Quezon"];
+        const DEFAULT_HEADERS = [
+            "Region", "Name of Official", "Designation", "Office", "Date Visited", "Unique Code", "Location",
+            "Name of Partner Organization", "Name of Representative", "No. of Members", "Target Area", "Area Planted",
+            "Commodity", "No of Seedlings Planted", "Survival Rate", "Csd Contract Amount", "Amount Paid", "Remarks"
+        ];
+
+        let activeSheet = "PENRO Palawan";
+        let isEditMode = false;
+        let rowToDelete = null;
+        let colToDelete = null;
+        let tabToDelete = null;
+
+        // Dynamic State
+        let ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+        let SHEET_HEADERS = [...DEFAULT_HEADERS];
+        let SHEET_DATABASE = {};
+        let SHEET_TARGETS = {};
+        let SHEET_CUSTOM_HEADERS = {};
+        let HISTORY_STACK = [];
+        let insertMonthTarget = { startIndex: -1, endIndex: -1 };
+        let activeChart = null;
+
+        // HELPER: Safely trim any value
+        function safeTrim(val) {
+            if (val === null || val === undefined) return "";
+            return String(val).trim();
+        }
+
+        // HELPER: Robust currency/numeric parsing
+        function parseCurrency(str) {
+            if (!str) return 0;
+            // 1. Remove everything inside parentheses e.g. (155 ha)
+            let cleaned = String(str).replace(/\(.*\)/g, '');
+            // 2. Remove all non-numeric characters except decimal point
+            cleaned = cleaned.replace(/[^0-9.]/g, '');
+            return parseFloat(cleaned) || 0;
+        }
+
+        // HELPER: Strict percentage parsing
+        function parsePercentage(str) {
+            if (!str) return 0;
+            // Only accept digits followed by % (allow optional single space/dot)
+            // Rejects multiple dots (10..%) or multiple spaces
+            const match = String(str).match(/(\d+\.?\d*)\s?%/);
+            if (match) {
+                return parseFloat(match[1]) || 0;
+            }
+            return 0;
+        }
+
+        // GLOBAL HELPER: Shared detection for month/period header rows
+        // Detect if a row is a month/period header
+        function isHeaderRow(row, sName) {
+            if (!row || !Array.isArray(row) || row.length === 0) return false;
+            const first = safeTrim(row[0]).toUpperCase();
+            if (!first) return false;
+            const custom = SHEET_CUSTOM_HEADERS[sName] || [];
+            const match = MONTHS.includes(first) ||
+                custom.some(h => safeTrim(h).toUpperCase() === first);
+            if (!match) return false;
+
+            // Second cell check: empty, null, undefined, 0, or whitespace
+            const sVal = row[1];
+            return !sVal || safeTrim(sVal) === "";
+        }
+
+        window.addEventListener('load', async () => {
+            const loading = document.getElementById('loadingOverlay');
+            try {
+                await DBService.init();
+
+                // Load Headers
+                let storedHeaders = await DBService.get('SHEET_HEADERS_DYN');
+                if (storedHeaders && storedHeaders.length > 0) SHEET_HEADERS = storedHeaders;
+                else SHEET_HEADERS = [...DEFAULT_HEADERS];
+
+                // Load Active Sheets List (Tabs)
+                let storedSheets = await DBService.get('ACTIVE_SHEETS_LIST');
+                if (storedSheets && storedSheets.length > 0) ACTIVE_SHEETS = storedSheets;
+                else ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+
+                let storedDB = await DBService.get('SHEET_DATABASE');
+                if (!storedDB || Object.keys(storedDB).length === 0) {
+                    storedDB = {};
+                    ACTIVE_SHEETS.forEach(sheet => storedDB[sheet] = generateDefaultSheetData());
+                } else {
+                    // Ensure all active sheets exist in DB
+                    ACTIVE_SHEETS.forEach(sheet => { if (!storedDB[sheet]) storedDB[sheet] = generateDefaultSheetData(); });
+                }
+                SHEET_DATABASE = storedDB;
+
+                SHEET_TARGETS = await DBService.get('SHEET_TARGETS') || {};
+                ACTIVE_SHEETS.forEach(s => { if (!SHEET_TARGETS[s]) SHEET_TARGETS[s] = 5; });
+
+                SHEET_CUSTOM_HEADERS = await DBService.get('SHEET_CUSTOM_HEADERS') || {};
+
+                // Set active sheet to first if current invalid
+                if (!ACTIVE_SHEETS.includes(activeSheet) && ACTIVE_SHEETS.length > 0) activeSheet = ACTIVE_SHEETS[0];
+
+                renderTabs();
+            } catch (err) {
+                console.error(err);
+                alert("Fatal Error: " + err);
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        function generateDefaultSheetData() {
+            let data = [];
+            const blankRow = Array(SHEET_HEADERS.length).fill("");
+            MONTHS.forEach(m => {
+                data.push([m]);
+                for (let k = 0; k < 5; k++) data.push([...blankRow]);
+            });
+            return data;
+        }
+
+        function openAnalytics(type) {
+            const modal = document.getElementById('chartModal');
+            const title = document.getElementById('chartTitle');
+            const canvas = document.getElementById('analyticsChart');
+            if (!modal || !canvas) return;
+
+            if (activeChart) activeChart.destroy();
+
+            let labels = [];
+            let dataValues = [];
+            let chartType = 'bar';
+            let chartLabel = '';
+
+            const db = SHEET_DATABASE || {};
+            const offices = Object.keys(db);
+
+            if (type === 'sites') {
+                title.innerText = `Visits by Location: ${activeSheet}`;
+                chartType = 'bar';
+                chartLabel = 'Visits';
+                let counts = {};
+                (db[activeSheet] || []).forEach(row => {
+                    if (isHeaderRow(row, activeSheet)) return;
+                    let location = safeTrim(row[6]) || "Unspecified";
+                    if (safeTrim(row[4])) counts[location] = (counts[location] || 0) + 1;
+                });
+                labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                dataValues = labels.map(l => counts[l]);
+            } else if (type === 'seedlings') {
+                title.innerText = `Seedlings by Commodity: ${activeSheet}`;
+                chartType = 'pie';
+                chartLabel = 'Seedlings';
+                let counts = {};
+                (db[activeSheet] || []).forEach(row => {
+                    if (isHeaderRow(row, activeSheet)) return;
+                    let commodity = safeTrim(row[12]) || "Unspecified";
+                    let qty = parseCurrency(row[13]);
+                    if (qty > 0) counts[commodity] = (counts[commodity] || 0) + qty;
+                });
+                labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                dataValues = labels.map(l => counts[l]);
+            } else if (type === 'survival') {
+                title.innerText = `Average Survival Rate per Commodity: ${activeSheet}`;
+                chartType = 'bar';
+                chartLabel = 'Survival %';
+                let survMap = {};
+                (db[activeSheet] || []).forEach(row => {
+                    if (isHeaderRow(row, activeSheet)) return;
+                    let commodity = safeTrim(row[12]) || "Unspecified";
+                    let rate = parsePercentage(row[14]);
+                    if (rate > 0) {
+                        if (!survMap[commodity]) survMap[commodity] = { sum: 0, count: 0 };
+                        survMap[commodity].sum += rate;
+                        survMap[commodity].count++;
+                    }
+                });
+                labels = Object.keys(survMap).sort((a, b) => (survMap[b].sum / survMap[b].count) - (survMap[a].sum / survMap[a].count));
+                dataValues = labels.map(l => Math.round(survMap[l].sum / survMap[l].count));
+            } else if (type === 'contract') {
+                title.innerText = `Contract Costs by Partner Organization: ${activeSheet}`;
+                chartType = 'bar';
+                chartLabel = 'Cost (₱)';
+                let counts = {};
+                (db[activeSheet] || []).forEach(row => {
+                    if (isHeaderRow(row, activeSheet)) return;
+                    let partner = safeTrim(row[7]) || "Unspecified";
+                    let val = parseCurrency(row[15]);
+                    if (val > 0) counts[partner] = (counts[partner] || 0) + val;
+                });
+                labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                dataValues = labels.map(l => counts[l]);
+            }
+
+            const palette = ['#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0', '#FF5722', '#607D8B', '#795548', '#009688', '#FF9800', '#03A9F4', '#8BC34A'];
+
+            if (labels.length === 0) { labels = ["No Data"]; dataValues = [0]; }
+
+            modal.classList.add('show');
+            const ctx = canvas.getContext('2d');
+
+            // For Bar charts, if we want a legend like a Pie chart (per category),
+            // it's best to create separate datasets for each category.
+            let datasets = [];
+            if (chartType === 'pie') {
+                datasets.push({
+                    data: dataValues,
+                    backgroundColor: palette.slice(0, labels.length),
+                    borderWidth: 1
+                });
+            } else {
+                // Multi-colored Bars with Legend: One dataset per label
+                labels.forEach((label, i) => {
+                    datasets.push({
+                        label: label,
+                        data: dataValues.map((v, idx) => idx === i ? v : null),
+                        backgroundColor: palette[i % palette.length],
+                        borderWidth: 1,
+                        skipNull: true
+                    });
+                });
+            }
+
+            activeChart = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            // For bar charts with multiple datasets (stacked or grouped), we take the label
+                            // For Pie, same.
+                            const label = labels[index];
+                            openDrilldown(label, type);
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 20,
+                            left: 20,
+                            right: 40
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            color: '#fff',
+                            textShadowColor: 'black',
+                            textShadowBlur: 4,
+                            font: { weight: 'bold', size: 11 },
+                            formatter: (v) => v === 0 ? '' : v.toLocaleString(),
+                            display: 'auto'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                boxWidth: 15,
+                                font: { size: 11 },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let val = context.parsed.y || context.parsed || 0;
+                                    let label = context.dataset.label || context.label || "";
+                                    if (type === 'contract') return label + ': ₱' + val.toLocaleString();
+                                    if (type === 'survival') return label + ': ' + val + '%';
+                                    return label + ': ' + val.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: chartType === 'pie' ? {
+                        x: { display: false }, y: { display: false }
+                    } : {
+                        y: {
+                            beginAtZero: true,
+                            stacked: true,
+                            ticks: { font: { size: 10 } }
+                        },
+                        x: {
+                            display: false, // User requested to hide bottom labels to maximize bar size
+                            stacked: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function openDrilldown(category, metricType) {
+            const db = SHEET_DATABASE || {};
+            const listContainer = document.getElementById('drilldownList');
+            const title = document.getElementById('drilldownTitle');
+            const totalLabel = document.getElementById('drilldownTotal');
+            const modal = document.getElementById('drilldownModal');
+
+            title.innerText = `${category} - Details`;
+            listContainer.innerHTML = '';
+
+            let items = [];
+            let total = 0;
+
+            // Iterate ALL sheets to find matches
+            Object.keys(db).forEach(sheetName => {
+                const rows = db[sheetName] || [];
+                rows.forEach(row => {
+                    if (isHeaderRow(row, sheetName)) return;
+
+                    let match = false;
+                    let val = 0;
+                    let label = ""; // e.g. PO Name or Location
+
+                    // Row Indices:
+                    // 4: Date Visited -> for "sites" (Visits) - Category is Location(6)
+                    // 6: Location
+                    // 7: Partner Org
+                    // 12: Commodity
+                    // 13: Seedlings
+                    // 14: Survival
+                    // 15: Contract
+
+                    if (metricType === 'sites') {
+                        let loc = safeTrim(row[6]) || "Unspecified";
+                        if (loc === category && safeTrim(row[4])) {
+                            match = true;
+                            val = 1;
+                            label = row[7] || row[6]; // Show PO or Loc
+                        }
+                    } else if (metricType === 'seedlings') {
+                        let comm = safeTrim(row[12]) || "Unspecified";
+                        if (comm === category) {
+                            val = parseCurrency(row[13]);
+                            if (val > 0) { match = true; label = row[7] || "Unknown PO"; }
+                        }
+                    } else if (metricType === 'survival') {
+                        // For survival, "category" is Commodity. We list POs and their rates?
+                        // Chart is Average Survival. Drilldown could be list of POs with that commodity.
+                        let comm = safeTrim(row[12]) || "Unspecified";
+                        if (comm === category) {
+                            val = parsePercentage(row[14]);
+                            if (val > 0) { match = true; label = row[7] || "Unknown PO"; }
+                        }
+                    } else if (metricType === 'contract') {
+                        let partner = safeTrim(row[7]) || "Unspecified";
+                        if (partner === category) {
+                            val = parseCurrency(row[15]);
+                            if (val > 0) { match = true; label = sheetName; } // Since category IS partner, show sheet/location
+                        }
+                    }
+
+                    if (match) {
+                        items.push({ name: label, val: val, sheet: sheetName });
+                        if (metricType !== 'survival') total += val; // Don't sum percentages
+                    }
+                });
+            });
+
+            // Sort desc
+            items.sort((a, b) => b.val - a.val);
+
+            if (items.length === 0) listContainer.innerHTML = "<div style='text-align:center; padding:20px; color:#888;'>No records found.</div>";
+            else {
+                items.forEach(item => {
+                    let valStr = item.val.toLocaleString();
+                    if (metricType === 'contract') valStr = '₱' + item.val.toLocaleString();
+                    if (metricType === 'survival') valStr = item.val + '%';
+
+                    listContainer.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+                            <div>
+                                <span style="font-weight:600; color:#444;">${item.name}</span>
+                                <div style="font-size:0.7rem; color:#888;">${item.sheet}</div>
+                            </div>
+                            <span style="font-weight:700; color:#2e7d32;">${valStr}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            if (metricType === 'survival') totalLabel.innerText = ''; // No total for %
+            else if (metricType === 'contract') totalLabel.innerText = `TOTAL: ₱${total.toLocaleString()}`;
+            else totalLabel.innerText = `TOTAL: ${total.toLocaleString()}`;
+
+            modal.classList.add('show');
+        }
+
+        function closeDrilldownModal() {
+            document.getElementById('drilldownModal').classList.remove('show');
+        }
+
+        function closeChartModal() {
+            const modal = document.getElementById('chartModal');
+            if (modal) modal.classList.remove('show');
+            if (activeChart) { activeChart.destroy(); activeChart = null; }
+        }
+
+        function showFormula(type) {
+            let formulas = {
+                sites: "<b>Total Sites:</b> Counts the number of visits in this sheet. Clicking this card shows which <b>Locations</b> were visited most.",
+                seedlings: "<b>Total Seedlings:</b> Sums the 'No of Seedlings Planted' column. Clicking this show a breakdown by <b>Commodity</b>.",
+                survival: "<b>Survivor %:</b> Calculates the average survival rate. Clicking this card shows the average survival rate <b>Per Commodity</b>.",
+                contract: "<b>Contract Cost:</b> Sums the total Csd Contract Amount for this tab. Clicking this shows a breakdown by <b>Partner Organization</b>."
+            };
+            alert(formulas[type].replace(/<[^>]*>/g, ''));
+        }
+
+        function pushHistory() {
+            if (!SHEET_DATABASE[activeSheet]) return;
+            let state = JSON.stringify(SHEET_DATABASE[activeSheet]);
+            HISTORY_STACK.push({ sheet: activeSheet, data: state });
+            if (HISTORY_STACK.length > 20) HISTORY_STACK.shift();
+        }
+
+        function undo() {
+            if (HISTORY_STACK.length === 0) return;
+            let lastState = HISTORY_STACK.pop();
+            if (lastState.sheet === activeSheet) {
+                SHEET_DATABASE[activeSheet] = JSON.parse(lastState.data);
+                renderTable();
+                saveToStorage();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+        });
+
+        // TSV PARSER
+        function parseTSV(str) {
+            let rows = []; let r = []; let val = ""; let inQuote = false;
+            for (let i = 0; i < str.length; i++) {
+                let c = str[i]; let next = str[i + 1];
+                if (c === '"') {
+                    if (inQuote && next === '"') { val += '"'; i++; } else { inQuote = !inQuote; }
+                } else if (c === '\t' && !inQuote) {
+                    r.push(val); val = "";
+                } else if ((c === '\r' || c === '\n') && !inQuote) {
+                    if (c === '\r' && next === '\n') i++;
+                    r.push(val); rows.push(r); r = []; val = "";
+                } else { val += c; }
+            }
+            if (val || r.length > 0) { r.push(val); rows.push(r); }
+            return rows;
+        }
+
+        document.addEventListener('paste', async (e) => {
+            if (!isEditMode) return;
+            const activeEl = document.activeElement;
+            let startRow = -1; let startCol = 0;
+            if (activeEl && activeEl.tagName === 'TD') {
+                const tr = activeEl.parentElement;
+                startRow = parseInt(tr.getAttribute('data-row-index'));
+                startCol = activeEl.cellIndex - 1;
+                if (isNaN(startRow)) startRow = -1;
+            }
+            if (startRow === -1) { alert("Please click a cell to start pasting there."); return; }
+            e.preventDefault();
+            const clipboardText = (e.clipboardData || window.clipboardData).getData('text');
+            if (!clipboardText) return;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingText').innerText = "Analyzing Paste...";
+            try {
+                let rows = parseTSV(clipboardText);
+                while (rows.length > 0 && rows[rows.length - 1].every(cell => !cell || cell.trim() === '')) { rows.pop(); }
+                if (rows.length === 0) { document.getElementById('loadingOverlay').style.display = 'none'; return; }
+
+                let sheetData = SHEET_DATABASE[activeSheet];
+                let rowsNeeded = rows.length;
+                let custom = SHEET_CUSTOM_HEADERS[activeSheet] || [];
+                let nextHeaderIdx = sheetData.length;
+
+                for (let k = startRow + 1; k < sheetData.length; k++) {
+                    let r = sheetData[k];
+                    let val = (r && r[0]) ? r[0].toUpperCase() : "";
+                    if (val && (MONTHS.includes(val) || custom.map(c => c.toUpperCase()).includes(val)) && (!r[1] || r[1].trim() === "")) {
+                        nextHeaderIdx = k; break;
+                    }
+                }
+
+                let availableSpace = nextHeaderIdx - startRow;
+                if (rowsNeeded > availableSpace) {
+                    showWarningModal(rowsNeeded, availableSpace);
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    return;
+                }
+
+                pushHistory();
+                for (let r = 0; r < rows.length; r++) {
+                    let targetRowIdx = startRow + r;
+                    let rowData = rows[r];
+                    if (!sheetData[targetRowIdx]) { sheetData[targetRowIdx] = Array(SHEET_HEADERS.length).fill(""); }
+                    while (sheetData[targetRowIdx].length < SHEET_HEADERS.length) { sheetData[targetRowIdx].push(""); }
+                    for (let c = 0; c < rowData.length; c++) {
+                        let targetColIdx = startCol + c;
+                        if (targetColIdx < SHEET_HEADERS.length) {
+                            sheetData[targetRowIdx][targetColIdx] = rowData[c].trim();
+                        }
+                    }
+                }
+                SHEET_DATABASE[activeSheet] = sheetData;
+                await saveToStorage();
+                renderTable();
+            } catch (err) {
+                console.error(err);
+                alert("Paste Failed: " + err.message);
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        });
+
+        async function saveToStorage() {
+            try {
+                await DBService.save('SHEET_DATABASE', SHEET_DATABASE);
+                await DBService.save('SHEET_TARGETS', SHEET_TARGETS);
+                await DBService.save('SHEET_HEADERS_DYN', SHEET_HEADERS);
+                await DBService.save('ACTIVE_SHEETS_LIST', ACTIVE_SHEETS);
+                await DBService.save('SHEET_CUSTOM_HEADERS', SHEET_CUSTOM_HEADERS);
+            } catch (e) {
+                console.error("Storage Error:", e);
+            }
+        }
+
+        function updateStats() {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            let visits = 0, seedlings = 0, survivalTotal = 0, survivalCount = 0, contract = 0;
+
+            data.forEach(row => {
+                if (isHeaderRow(row, activeSheet)) return;
+
+                // Count Visits (Date Visited)
+                if (safeTrim(row[4]) !== "") visits++;
+
+                // Sum Seedlings
+                let sVal = parseCurrency(row[13]);
+                seedlings += sVal;
+
+                // Avg Survival
+                let survVal = parsePercentage(row[14]);
+                if (survVal > 0) { survivalTotal += survVal; survivalCount++; }
+
+                // Sum Contract
+                let cVal = parseCurrency(row[15]);
+                contract += cVal;
+            });
+
+            document.getElementById('totalVisits').innerText = visits;
+            document.getElementById('totalSeedlings').innerText = seedlings.toLocaleString();
+            document.getElementById('avgSurvival').innerText = (survivalCount > 0 ? Math.round(survivalTotal / survivalCount) : 0) + '%';
+            document.getElementById('totalContract').innerText = '₱' + contract.toLocaleString('en-US', { minimumFractionDigits: 2 });
+        }
+
+        function showWarningModal(needed, available) {
+            document.getElementById('warningText').innerText = `You are trying to paste ${needed} rows, but there are only ${available} empty rows left in this block.\n\nSolution:\n1. Click 'OK'\n2. Click the (+) button in the Month Header.\n3. Paste again.`;
+            document.getElementById('warningModal').classList.add('show');
+        }
+        function closeWarningModal() { document.getElementById('warningModal').classList.remove('show'); }
+
+        function openInsertMonthModal(startIdx, endIdx) {
+            insertMonthTarget.startIndex = startIdx;
+            insertMonthTarget.endIndex = endIdx;
+            document.getElementById('newMonthName').value = "";
+            document.getElementById('insertMonthModal').classList.add('show');
+            document.getElementById('newMonthName').focus();
+        }
+        function closeInsertMonthModal() { document.getElementById('insertMonthModal').classList.remove('show'); }
+
+        function executeInsertMonth(position) {
+            const title = document.getElementById('newMonthName').value.trim();
+            if (!title) return;
+            closeInsertMonthModal(); pushHistory();
+            if (!SHEET_CUSTOM_HEADERS[activeSheet]) SHEET_CUSTOM_HEADERS[activeSheet] = [];
+            SHEET_CUSTOM_HEADERS[activeSheet].push(title);
+            const blankRow = Array(SHEET_HEADERS.length).fill("");
+            let insertPos = (position === 'before') ? insertMonthTarget.startIndex : insertMonthTarget.endIndex + 1;
+            SHEET_DATABASE[activeSheet].splice(insertPos, 0, [title]);
+            for (let k = 0; k < 5; k++) SHEET_DATABASE[activeSheet].splice(insertPos + 1 + k, 0, [...blankRow]);
+            DBService.save('SHEET_CUSTOM_HEADERS', SHEET_CUSTOM_HEADERS).then(saveToStorage).then(renderTable);
+        }
+
+        function renderTable() {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            const headerContainer = document.getElementById('tableHeader');
+            const bodyContainer = document.getElementById('sheetBody');
+            if (!headerContainer || !bodyContainer) return;
+
+            // Header Row
+            let headerHtml = '<tr><th style="width:40px;">#</th>';
+            SHEET_HEADERS.forEach((h, index) => {
+                let safeName = h.replace(/'/g, "\\'");
+                let delBtn = isEditMode ? `<i class="fas fa-times" style="margin-left:5px; color:#ef5350; cursor:pointer;" onclick="openDeleteColModal(${index}, '${safeName}')"></i>` : '';
+                let content = isEditMode ? `<span contenteditable="true" onblur="renameHeader(${index}, this.innerText)" onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}">${h}</span>` : h;
+                headerHtml += `<th>${content} ${delBtn}</th>`;
+            });
+            if (isEditMode) headerHtml += `<th style="width:40px; cursor:pointer; background:#fff3e0; color:#ef6c00;" onclick="openAddColumnModal()" title="Add Column">+</th>`;
+            headerHtml += '</tr>';
+            headerContainer.innerHTML = headerHtml;
+
+            let html = '';
+            const target = SHEET_TARGETS[activeSheet] || 5;
+
+            // Pre-calculate block counts for badges
+            let blockCounts = {}; let currentHeaderIdx = -1;
+            for (let i = 0; i < data.length; i++) {
+                if (isHeaderRow(data[i], activeSheet)) { currentHeaderIdx = i; blockCounts[i] = 0; }
+                else if (currentHeaderIdx !== -1) {
+                    if (data[i] && data[i].some((c, idx) => idx > 0 && safeTrim(c) !== "")) blockCounts[currentHeaderIdx]++;
+                }
+            }
+
+            // Pre-calculate end indices for insert month block logic
+            let hEndIndices = {}; let lastH = -1;
+            for (let i = 0; i < data.length; i++) {
+                if (isHeaderRow(data[i], activeSheet)) { if (lastH !== -1) hEndIndices[lastH] = i - 1; lastH = i; }
+            }
+            if (lastH !== -1) hEndIndices[lastH] = data.length - 1;
+
+            for (let i = 0; i < data.length; i++) {
+                let row = data[i] || [];
+                if (isHeaderRow(row, activeSheet)) {
+                    let count = blockCounts[i] || 0;
+                    let badge = '';
+                    if (count < target) badge = `<span style="background:#ffebee; color:#d32f2f; padding:2px 6px; border-radius:4px; font-size:0.6rem; font-weight:700; margin-left:8px;">(UNDER ${count}/${target})</span>`;
+                    else if (count === target) badge = `<span style="background:#e8f5e9; color:#2e7d32; padding:2px 6px; border-radius:4px; font-size:0.6rem; font-weight:700; margin-left:8px;">(MET)</span>`;
+                    else badge = `<span style="background:#E3F2FD; color:#1565C0; padding:2px 6px; border-radius:4px; font-size:0.6rem; font-weight:700; margin-left:8px;">(OVER ${count}/${target})</span>`;
+
+                    let endIdx = hEndIndices[i] || i;
+                    let colSpan = SHEET_HEADERS.length + 1 + (isEditMode ? 1 : 0);
+
+                    html += `<tr class="month-header-row">
+                                <td colspan="${colSpan}">
+                                    <div class="month-header-content">
+                                        <span ${isEditMode ? 'contenteditable="true"' : ''} onblur="saveCell(${i}, 0, this.innerText)">${row[0]}</span>
+                                        ${badge}
+                                        ${isEditMode ? `<i class="fas fa-plus-circle" onclick="insertRow(${i})" title="Insert Row"></i>` : ''}
+                                        ${isEditMode ? `<i class="fas fa-calendar-plus" onclick="openInsertMonthModal(${i}, ${endIdx})" title="Insert Month Block"></i>` : ''}
+                                        ${isEditMode ? `<i class="fas fa-trash-alt" style="margin-left:auto; cursor:pointer; color:#ef5350;" onclick="confirmDeleteRow(${i})"></i>` : ''}
+                                    </div>
+                                </td>
+                            </tr>`;
+                } else {
+                    html += `<tr data-row-index="${i}" onmouseover="showRowTooltip(event, ${i})" onmouseout="hideTooltip()">
+                                <td style="text-align:center; color:#757575; font-size:0.7rem;">${i + 1} ${isEditMode ? `<i class="fas fa-trash-alt delete-row-btn" onclick="confirmDeleteRow(${i})"></i>` : ''}</td>`;
+                    for (let j = 0; j < SHEET_HEADERS.length; j++) {
+                        let cellVal = row[j] || "";
+                        html += `<td ${isEditMode ? 'contenteditable="true" tabindex="0"' : ''} onblur="saveCell(${i}, ${j}, this.innerText)">${cellVal}</td>`;
+                    }
+                    if (isEditMode) html += `<td style="background:#f9f9f9;"></td>`;
+                    html += `</tr>`;
+                }
+            }
+            bodyContainer.innerHTML = html;
+            updateStats();
+            document.getElementById('activeSheetLabel').textContent = activeSheet;
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('tabContainer'); if (!container) return;
+            container.innerHTML = '';
+            ACTIVE_SHEETS.forEach(sheetName => {
+                const div = document.createElement('div');
+                div.className = `sheet-tab ${sheetName === activeSheet ? 'active' : ''}`;
+                div.id = `tab-${sheetName}`;
+                div.onclick = (e) => {
+                    if (e.target.classList.contains('fa-times') || e.target.getAttribute('contenteditable') === 'true') return;
+                    switchTab(sheetName);
+                };
+
+                let delIcon = isEditMode ? `<i class="fas fa-times" style="margin-left:8px; color:#ef5350; cursor:pointer;" onclick="openDeleteTabModal('${sheetName}')"></i>` : '';
+                let nameHtml = isEditMode
+                    ? `<span class="tab-name" contenteditable="true" onblur="renameTab('${sheetName}', this.innerText)" onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}">${sheetName}</span>`
+                    : `<span class="tab-name">${sheetName}</span>`;
+
+                div.innerHTML = `<i class="fas fa-folder" style="font-size:0.8rem; opacity:0.7;"></i> ${nameHtml} ${delIcon}`;
+                container.appendChild(div);
+            });
+            if (isEditMode) {
+                container.innerHTML += `<div class="sheet-tab" style="width:40px; justify-content:center; color:#2E7D32; background:#E8F5E9;" onclick="openAddTabModal()">+</div>`;
+            }
+            if (activeSheet) renderTable();
+        }
+
+        async function renameTab(oldName, newName) {
+            newName = newName.trim();
+            if (!newName || newName === oldName) { renderTabs(); return; }
+            if (ACTIVE_SHEETS.includes(newName)) { alert("Sheet name already exists!"); renderTabs(); return; }
+
+            const idx = ACTIVE_SHEETS.indexOf(oldName);
+            if (idx !== -1) ACTIVE_SHEETS[idx] = newName;
+
+            SHEET_DATABASE[newName] = SHEET_DATABASE[oldName];
+            delete SHEET_DATABASE[oldName];
+
+            if (SHEET_TARGETS[oldName]) {
+                SHEET_TARGETS[newName] = SHEET_TARGETS[oldName];
+                delete SHEET_TARGETS[oldName];
+            }
+            if (SHEET_CUSTOM_HEADERS[oldName]) {
+                SHEET_CUSTOM_HEADERS[newName] = SHEET_CUSTOM_HEADERS[oldName];
+                delete SHEET_CUSTOM_HEADERS[oldName];
+            }
+
+            if (activeSheet === oldName) activeSheet = newName;
+            await saveToStorage();
+            renderTabs();
+        }
+
+        async function renameHeader(index, newName) {
+            newName = newName.trim();
+            if (!newName) { renderTable(); return; }
+            SHEET_HEADERS[index] = newName;
+            await saveToStorage();
+            renderTable();
+        }
+
+        function switchTab(sheetName) { activeSheet = sheetName; renderTabs(); }
+
+        function toggleEditMode() {
+            isEditMode = document.getElementById('editMode').checked;
+            document.getElementById('mainPane').classList.toggle('edit-active-block', isEditMode);
+            document.getElementById('mainTable').classList.toggle('edit-active', isEditMode);
+            renderTabs(); renderTable();
+        }
+
+        function saveCell(rowIndex, colIndex, value) {
+            pushHistory();
+            if (!SHEET_DATABASE[activeSheet][rowIndex]) SHEET_DATABASE[activeSheet][rowIndex] = [];
+            while (SHEET_DATABASE[activeSheet][rowIndex].length < SHEET_HEADERS.length)
+                SHEET_DATABASE[activeSheet][rowIndex].push("");
+            SHEET_DATABASE[activeSheet][rowIndex][colIndex] = value;
+            saveToStorage();
+        }
+
+        function confirmDeleteRow(index) {
+            rowToDelete = index;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            rowToDelete = null;
+        }
+
+        function executeDelete() {
+            if (rowToDelete !== null) {
+                pushHistory();
+                SHEET_DATABASE[activeSheet].splice(rowToDelete, 1);
+                saveToStorage();
+                renderTable();
+                closeDeleteModal();
+            }
+        }
+
+        function insertRow(headerIdx) {
+            pushHistory();
+            const blankRow = Array(SHEET_HEADERS.length).fill("");
+            SHEET_DATABASE[activeSheet].splice(headerIdx + 1, 0, blankRow);
+            saveToStorage();
+            renderTable();
+        }
+
+        async function resetAllData() {
+            if (confirm("RESET to Default Layout? Custom Data will be erased.")) {
+                pushHistory();
+                let newDB = {};
+                ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+                SHEET_HEADERS = [...DEFAULT_HEADERS];
+                ACTIVE_SHEETS.forEach(sheet => newDB[sheet] = generateDefaultSheetData());
+                SHEET_DATABASE = newDB;
+                await saveToStorage();
+                renderTabs();
+                alert("Reset Complete.");
+            }
+        }
+
+        function openAddColumnModal() {
+            document.getElementById('newColName').value = "";
+            document.getElementById('addColumnModal').classList.add('show');
+            document.getElementById('newColName').focus();
+        }
+        function closeAddColumnModal() { document.getElementById('addColumnModal').classList.remove('show'); }
+        function executeAddColumn() {
+            const name = document.getElementById('newColName').value.trim();
+            if (!name) return;
+            SHEET_HEADERS.push(name);
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => { if (row) row.push(""); });
+            }
+            saveToStorage(); closeAddColumnModal(); renderTable();
+        }
+
+        function openDeleteColModal(index, name) {
+            colToDelete = index;
+            document.getElementById('delColName').innerText = name;
+            document.getElementById('deleteColModal').classList.add('show');
+        }
+        function closeDeleteColModal() { document.getElementById('deleteColModal').classList.remove('show'); colToDelete = null; }
+        function executeDeleteColumn() {
+            if (colToDelete === null) return;
+            SHEET_HEADERS.splice(colToDelete, 1);
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => { if (row && row.length > colToDelete) row.splice(colToDelete, 1); });
+            }
+            saveToStorage(); closeDeleteColModal(); renderTable();
+        }
+
+        function openAddTabModal() {
+            document.getElementById('newTabName').value = "";
+            document.getElementById('addTabModal').classList.add('show');
+            document.getElementById('newTabName').focus();
+        }
+        function closeAddTabModal() { document.getElementById('addTabModal').classList.remove('show'); }
+        function executeAddTab() {
+            const name = document.getElementById('newTabName').value.trim();
+            if (!name) return;
+            if (ACTIVE_SHEETS.includes(name)) { alert("Sheet already exists!"); return; }
+            ACTIVE_SHEETS.push(name);
+            SHEET_DATABASE[name] = generateDefaultSheetData();
+            saveToStorage(); closeAddTabModal(); activeSheet = name; renderTabs();
+        }
+
+        function openDeleteTabModal(name) {
+            tabToDelete = name;
+            document.getElementById('delTabName').innerText = name;
+            document.getElementById('deleteTabModal').classList.add('show');
+        }
+        function closeDeleteTabModal() { document.getElementById('deleteTabModal').classList.remove('show'); tabToDelete = null; }
+        function executeDeleteTab() {
+            if (!tabToDelete) return;
+            ACTIVE_SHEETS = ACTIVE_SHEETS.filter(s => s !== tabToDelete);
+            delete SHEET_DATABASE[tabToDelete];
+            if (activeSheet === tabToDelete) { activeSheet = ACTIVE_SHEETS.length > 0 ? ACTIVE_SHEETS[0] : null; }
+            saveToStorage(); closeDeleteTabModal(); renderTabs();
+        }
+
+        const tooltip = document.getElementById('rowTooltip');
+        function showRowTooltip(e, rowIndex) {
+            const data = SHEET_DATABASE[activeSheet];
+            if (!data || !data[rowIndex]) return;
+            let c = ''; let count = 0;
+            for (let k = 0; k < data[rowIndex].length; k++) {
+                if (data[rowIndex][k] && count < 3) { c += `<div>${data[rowIndex][k]}</div>`; count++; }
+            }
+            tooltip.style.display = 'block'; tooltip.innerHTML = c || 'No Data'; moveTooltip(e);
+        }
+        function moveTooltip(e) {
+            let x = e.clientX + 15; let y = e.clientY + 15;
+            if (x + 300 > window.innerWidth) x = e.clientX - 310;
+            if (y + 120 > window.innerHeight) y = e.clientY - 120;
+            tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+        }
+        function hideTooltip() { tooltip.style.display = 'none'; }
+
+        function openTargetsModal() {
+            const c = document.getElementById('targetInputs'); c.innerHTML = '';
+            const k = activeSheet;
+            document.getElementById('targetSheetLabel').innerText = k;
+            c.innerHTML += `
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <label class="modern-label">Monthly Visit Target</label>
+                    <input id="target-${k.replace(/\s/g, '-')}" value="${SHEET_TARGETS[k] || 5}" type="number" class="modern-form-control">
+                    <small style="color:#999; font-size:0.8rem;">Default: 5 visits per month.</small>
+                </div>`;
+            document.getElementById('targetsModal').classList.add('show');
+        }
+        function closeTargetsModal() { document.getElementById('targetsModal').classList.remove('show'); }
+
+        async function saveTargets() {
+            const k = activeSheet;
+            const val = parseInt(document.getElementById(`target-${k.replace(/\s/g, '-')}`).value) || 5;
+            SHEET_TARGETS[k] = val;
+            await saveToStorage();
+            closeTargetsModal();
+            renderTable();
+        }
+    </script>
+</body>
+
+</html>

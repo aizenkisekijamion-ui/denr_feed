@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- VERSION: SEEDLINGS CLONE OF SITE VISIT -->
+    <meta name="version" content="1.0.0">
+    <title>M&P 2025 | NGP Palawan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="scripts/db-service.js"></script>
+    <script src="scripts/data-model.js"></script>
+
+    <style>
+        .layout {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-pane {
+            margin-left: 280px;
+            flex: 1;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            width: calc(100% - 280px);
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2E7D32;
+            /* Primary Green */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* FLEX SHRINK FIXES */
+        .page-header {
+            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .stats-container {
+            flex-shrink: 0;
+            margin-bottom: 0.5rem;
+            padding: 0 0.5rem;
+        }
+
+        .visit-stats {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .visit-stats .card {
+            flex: 1;
+            min-width: 180px;
+            max-width: 240px;
+            padding: 0.75rem !important;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .visit-stats .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .visit-stats .card i {
+            font-size: 1rem !important;
+            width: 30px !important;
+            height: 30px !important;
+        }
+
+        .visit-stats .card .stat-val {
+            font-size: 1.1rem !important;
+        }
+
+        .sheet-tabs-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            flex-shrink: 0;
+            overflow-x: auto;
+            padding: 0 4px;
+            height: 35px;
+        }
+
+        .sheet-tab {
+            padding: 0 8px;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #616161;
+            transition: all 0.2s;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            width: 150px;
+            max-width: 200px;
+            min-width: 120px;
+            font-size: 0.8rem;
+        }
+
+        .sheet-tab .tab-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            text-align: left;
+        }
+
+        .sheet-tab:hover {
+            background: #eeeeee;
+        }
+
+        .sheet-tab.active {
+            background: white;
+            color: #2E7D32;
+            height: 32px;
+            margin-top: -2px;
+            z-index: 10;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            border-top: 3px solid #2E7D32;
+        }
+
+        .controls-bar {
+            flex-shrink: 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 4px 0 0;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+            min-height: 40px;
+        }
+
+        .sheet-container {
+            flex: 1;
+            overflow: auto;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sheet-table {
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: auto;
+            flex: 1;
+        }
+
+        .sheet-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #EEE;
+        }
+
+        .sheet-table th {
+            background: #EEE;
+            padding: 6px 8px;
+            height: 30px;
+            text-align: center;
+            border-right: 1px solid #CCC;
+            border-bottom: 2px solid #BBB;
+            font-weight: 700;
+            color: #333;
+            white-space: nowrap;
+            vertical-align: middle;
+            font-size: 0.75rem;
+        }
+
+        .sheet-table td {
+            padding: 4px 6px;
+            border-right: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            min-height: 24px;
+            white-space: nowrap;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: cell;
+            font-size: 0.75rem;
+        }
+
+        tr.month-header-row td {
+            padding: 0 !important;
+            border: none !important;
+            height: 22px !important;
+            background: #f1f8e9;
+            overflow: visible;
+        }
+
+        .month-header-content {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            height: 22px;
+            line-height: 22px;
+            font-size: 0.7rem;
+            border-bottom: 1px solid #c8e6c9;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .sheet-table td:focus {
+            background-color: #e3f2fd;
+            outline: 2px solid #2196F3;
+            outline-offset: -2px;
+            z-index: 5;
+            position: relative;
+        }
+
+        #updateIndicator {
+            display: none;
+        }
+
+        .edit-active-block #updateIndicator {
+            display: block;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            width: 450px;
+            max-width: 90%;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-overlay.show .modal-box {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+        }
+
+        .delete-tab-warning {
+            border-left: 5px solid #ef5350;
+        }
+
+        .modal-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-confirm-delete {
+            background: #ef5350;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm-delete:hover {
+            background: #d32f2f;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #555;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 36px;
+            height: 18px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: #c6c6c6;
+            outline: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-switch:checked {
+            background: #2E7D32;
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch:checked::before {
+            transform: translateX(18px);
+        }
+
+        .remarks-col {
+            width: 150px !important;
+            max-width: 200px !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .month-header-content i {
+            cursor: pointer;
+            color: #2E7D32;
+            font-size: 0.8rem;
+            transition: color 0.2s;
+            margin-left: 12px;
+        }
+
+        .month-header-content i:hover {
+            color: #1b5e20;
+        }
+
+        /* MODERN FORM STYLES */
+        .modern-form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.2s, box-shadow 0.2s;
+            background: #fafafa;
+        }
+
+        .modern-form-control:focus {
+            border-color: #2E7D32;
+            background: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .modern-label {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .modal-action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .modal-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-action-btn.primary {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+        }
+
+        .modal-action-btn.secondary {
+            background: white;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        .modal-action-btn.accent {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+        }
+
+        /* VIEW TOGGLE BUTTONS - REFINED */
+        .view-toggles {
+            display: flex;
+            gap: 8px;
+            background: #eee;
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .view-btn {
+            padding: 6px 14px;
+            border: none;
+            background: white;
+            color: #444;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 3px solid transparent;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .view-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-btn:active {
+            transform: translateY(0);
+        }
+
+        /* COLORS */
+        #btn-mobi.active {
+            background: #4CAF50;
+            color: white;
+            border-bottom-color: #2E7D32;
+        }
+
+        #btn-bill1.active {
+            background: #2196F3;
+            color: white;
+            border-bottom-color: #1565C0;
+        }
+
+        #btn-bill2.active {
+            background: #F44336;
+            color: white;
+            border-bottom-color: #B71C1C;
+        }
+
+        #btn-bill3.active {
+            background: #9C27B0;
+            color: white;
+            border-bottom-color: #6A1B9A;
+        }
+
+        #btn-avg.active {
+            background: #795548;
+            color: white;
+            border-bottom-color: #4E342E;
+        }
+
+        #btn-all.active {
+            background: #607D8B;
+            color: white;
+            border-bottom-color: #37474F;
+        }
+
+        #btn-mobi:hover:not(.active) {
+            border-bottom-color: #4CAF50;
+            color: #2E7D32;
+        }
+
+        #btn-bill1:hover:not(.active) {
+            border-bottom-color: #2196F3;
+            color: #1565C0;
+        }
+
+        #btn-bill2:hover:not(.active) {
+            border-bottom-color: #F44336;
+            color: #B71C1C;
+        }
+
+        #btn-bill3:hover:not(.active) {
+            border-bottom-color: #9C27B0;
+            color: #6A1B9A;
+        }
+
+        #btn-avg:hover:not(.active) {
+            border-bottom-color: #795548;
+            color: #4E342E;
+        }
+
+        #btn-all:hover:not(.active) {
+            border-bottom-color: #607D8B;
+            color: #37474F;
+        }
+
+        /* STAGE MODAL TABLE */
+        .stage-table-container {
+            max-height: 70vh;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        /* COLOR-CODED HEADERS FOR VIEW ALL */
+        .head-mobi {
+            background: #E8F5E9 !important;
+            color: #2E7D32 !important;
+            border-bottom: 2px solid #4CAF50 !important;
+        }
+
+        .head-bill1 {
+            background: #E3F2FD !important;
+            color: #1565C0 !important;
+            border-bottom: 2px solid #2196F3 !important;
+        }
+
+        .head-bill2 {
+            background: #FFEBEE !important;
+            color: #B71C1C !important;
+            border-bottom: 2px solid #F44336 !important;
+        }
+
+        .head-bill3 {
+            background: #F3E5F5 !important;
+            color: #6A1B9A !important;
+            border-bottom: 2px solid #9C27B0 !important;
+        }
+
+        .head-avg {
+            background: #EFEBE9 !important;
+            color: #4E342E !important;
+            border-bottom: 2px solid #795548 !important;
+        }
+
+        /* SUBHEAD COLORS */
+        .sub-mobi {
+            background: #F1F8E9 !important;
+            font-size: 0.7rem;
+        }
+
+        .sub-bill1 {
+            background: #E1F5FE !important;
+            font-size: 0.7rem;
+        }
+
+        .sub-bill2 {
+            background: #FFEBEE !important;
+            font-size: 0.7rem;
+        }
+
+        .sub-bill3 {
+            background: #F3E5F5 !important;
+            font-size: 0.7rem;
+        }
+
+        .sub-avg {
+            background: #FBE9E7 !important;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingText">Loading Bundle...</div>
+    </div>
+    <div id="updateIndicator"
+        style="position:fixed; bottom:20px; right:20px; background: #E8F5E9; color: #1B5E20; padding: 10px 15px; font-size: 0.8rem; border-radius: 8px; pointer-events: none; opacity: 1; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #C8E6C9; z-index: 5000;">
+        <i class="fas fa-clipboard"></i> <b>Paste Mode Active:</b> Select a cell & Press Ctrl+V
+    </div>
+
+    <div id="rowTooltip" class="custom-tooltip"
+        style="position:fixed; background:#333; color:white; padding:8px; border-radius:4px; font-size:0.7rem; display:none; pointer-events:none; z-index:9999; max-width: 300px;">
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <div style="font-size: 2.5rem; color: #ef5350; margin-bottom: 20px;"><i
+                    class="fas fa-exclamation-circle"></i></div>
+            <h3>Delete this Row?</h3>
+            <p style="color:#666; margin-bottom: 0;">This action cannot be undone.</p>
+            <div class="modal-actions" style="justify-content: center;">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDelete()">Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WARNING MODAL -->
+    <div id="warningModal" class="modal-overlay" style="z-index: 10002;">
+        <div class="modal-box" style="border-left: 5px solid #FF9800;">
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <div style="font-size: 2rem; color: #FF9800;"><i class="fas fa-hand-paper"></i></div>
+                <div>
+                    <h3 style="color:#E65100; margin-bottom: 10px;">Insufficient Space</h3>
+                    <p id="warningText"
+                        style="color:#555; text-align:left; margin:0; font-size:0.95rem; white-space: pre-wrap; line-height: 1.5;">
+                    </p>
+                </div>
+            </div>
+            <div class="modal-actions" style="justify-content: flex-end;">
+                <button class="modal-action-btn primary" onclick="closeWarningModal()">Okay, I understand</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- TARGETS MODAL -->
+    <div id="targetsModal" class="modal-overlay">
+        <div class="modal-box" style="width: 400px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0;">Monthly Targets</h3>
+                <button onclick="closeTargetsModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <p
+                style="font-size:0.9rem; color:#666; margin-bottom:20px; background:#f5f5f5; padding: 10px; border-radius: 6px;">
+                Setting targets for: <br><strong style="color:#2E7D32;" id="targetSheetLabel"></strong>
+            </p>
+
+            <div id="targetInputs" style="margin-bottom: 25px;">
+                <!-- DYNAMIC INPUT RENDERED HERE -->
+            </div>
+
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeTargetsModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="saveTargets()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD TAB MODAL -->
+    <div id="addTabModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Add New Tab (Sheet)</h3>
+            <div style="margin:20px 0;">
+                <label class="modern-label">New Sheet Name</label>
+                <input type="text" id="newTabName" class="modern-form-control" placeholder="e.g. Balabac">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeAddTabModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="executeAddTab()">Create Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE TAB MODAL -->
+    <div id="deleteTabModal" class="modal-overlay">
+        <div class="modal-box delete-tab-warning">
+            <div style="font-size: 2rem; color: #ef5350; margin-bottom: 10px;"><i class="fas fa-trash-alt"></i></div>
+            <h3>Delete Sheet?</h3>
+            <p style="color:#666;">Are you sure you want to delete <strong id="delTabName"></strong>?</p>
+            <p style="color:#d32f2f; font-size:0.9rem; margin-top:10px;"><b>WARNING:</b> All data in this sheet will be
+                permanently lost!</p>
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeDeleteTabModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDeleteTab()">Delete Forever</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD COLUMN MODAL -->
+    <div id="addColumnModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>Add New Column</h3>
+            <div style="margin:20px 0;">
+                <label class="modern-label">Column Header Name</label>
+                <input type="text" id="newColName" class="modern-form-control" placeholder="e.g. Remarks 2">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeAddColumnModal()">Cancel</button>
+                <button class="modal-action-btn primary" onclick="executeAddColumn()">Add Column</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE COLUMN MODAL -->
+    <div id="deleteColModal" class="modal-overlay">
+        <div class="modal-box delete-tab-warning">
+            <div style="font-size: 2rem; color: #ef5350; margin-bottom: 10px;"><i class="fas fa-columns"></i></div>
+            <h3>Delete Column?</h3>
+            <p style="color:#666;">Are you sure you want to delete <strong id="delColName"></strong>?</p>
+            <p style="color:#d32f2f; font-size:0.9rem; margin-top:10px;"><b>WARNING:</b> This column will be removed
+                from <b>ALL</b> sheets!</p>
+            <div class="modal-actions">
+                <button class="modal-action-btn secondary" onclick="closeDeleteColModal()">Cancel</button>
+                <button class="btn-confirm-delete" onclick="executeDeleteColumn()">Delete Column</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STAGE MODAL -->
+    <div id="stageModal" class="modal-overlay">
+        <div class="modal-box" style="width: 95vw; max-width: 1200px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <h3 id="stageModalTitle" style="margin:0;"><i class="fas fa-layer-group"></i> Stage Details</h3>
+                    <div
+                        style="display: flex; gap: 8px; align-items: center; background: #f5f5f5; padding: 5px 12px; border-radius: 20px; border: 1px solid #ddd;">
+                        <input type="checkbox" id="modalEditMode" class="toggle-switch" onchange="refreshStageTable()">
+                        <label for="modalEditMode"
+                            style="font-weight:700; cursor:pointer; font-size: 0.75rem; color: #444;">Edit Mode</label>
+                    </div>
+                </div>
+                <button onclick="closeStageModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="stage-table-container">
+                <table class="sheet-table" id="stageTableUI">
+                    <thead id="stageHeader"></thead>
+                    <tbody id="stageBody"></tbody>
+                </table>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-action-btn primary" onclick="closeStageModal()">Close / Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MISSING BILLING ANALYTICS MODAL -->
+    <div id="billingModal" class="modal-overlay">
+        <div class="modal-box" style="width: 700px; text-align: center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 id="billingModalTitle"><i class="fas fa-exclamation-triangle"></i> Missing Billing Inputs</h3>
+                <button onclick="closeBillingModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1; position: relative; height: 300px;">
+                    <canvas id="billingChart"></canvas>
+                </div>
+                <div
+                    style="flex: 1; text-align: left; max-height: 300px; overflow-y: auto; background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;">
+                    <div style="font-size: 0.8rem; color: #888; margin-bottom: 5px;">Click chart to filter list</div>
+                    <div id="billingDrilldownList">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-action-btn primary" onclick="closeBillingModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRILLDOWN MODAL -->
+    <div id="drilldownModal" class="modal-overlay" style="z-index: 10010;">
+        <div class="modal-box" style="width: 500px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 id="drilldownTitle">Detail Breakdown</h3>
+                <button onclick="closeDrilldownModal()"
+                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div id="drilldownList"
+                style="max-height: 400px; overflow-y: auto; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                <!-- DYNAMIC LIST -->
+            </div>
+            <div style="margin-top:20px; text-align: right; font-weight: 700; font-size: 1.1rem; color: #2e7d32;"
+                id="drilldownTotal">
+                TOTAL: 0
+            </div>
+        </div>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>NGP Palawan</h3>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item"> <a href="dashboard.html" class="nav-link"> <i class="fas fa-th-large"></i>
+                        Dashboard </a> </li>
+                <li class="nav-item"> <a href="financial.html" class="nav-link"> <i class="fas fa-coins"></i> Financial
+                    </a> </li>
+                <li class="nav-item"> <a href="site-visit.html" class="nav-link"> <i class="fas fa-clipboard-check"></i>
+                        Site Visit 2025 </a> </li>
+                <li class="nav-item"> <a href="#" class="nav-link active"> <i class="fas fa-shield-alt"></i> Maintenance
+                        & Protection </a> </li>
+                <li class="nav-item"> <a href="forest-nursery.html" class="nav-link"> <i class="fas fa-warehouse"></i>
+                        Forest Nursery 2025 </a> </li>
+                <li class="nav-item"> <a href="gis-map.html" class="nav-link"> <i class="fas fa-map-marked-alt"></i> GIS
+                        Map </a> </li>
+                <li class="nav-item"> <a href="photos.html" class="nav-link"> <i class="fas fa-images"></i> Geo-Photos
+                    </a> </li>
+                <li class="nav-item"> <a href="drive-files.html" class="nav-link"> <i class="fab fa-google-drive"></i>
+                        Drive Files </a> </li>
+            </ul>
+        </aside>
+
+        <main class="main-pane" id="mainPane">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2 style="font-size: 1.25rem; color: #2E7D32;"><i class="fas fa-shield-alt"></i>
+                        Maintenance and Protection (Plant Estab. CY 2025)</h2>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="window.print()"
+                        style="margin-right: 0.5rem; padding: 4px 10px; font-size: 0.8rem;"><i class="fas fa-print"></i>
+                        Print</button>
+                    <button class="btn btn-outline" onclick="resetAllData()"
+                        style="color: #d32f2f; border-color: #d32f2f; padding: 4px 10px; font-size: 0.8rem;"><i
+                            class="fas fa-trash-alt"></i> Clear / Reset</button>
+                </div>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="stats-container visit-stats">
+                <!-- Card 1: Seedlings Planted -->
+                <div class="card" onclick="openAnalytics('planted')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#e8f5e9; color:#2e7d32; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-tree"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Expected Planted <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('planted')"
+                                    title="Total from Average Column"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="statPlanted">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Survived & % -->
+                <div class="card" onclick="openAnalytics('survival')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#e1f5fe; color:#0288d1; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Survived / % Rate <i class="fas fa-info-circle"
+                                    style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('survival')"
+                                    title="Total Survived & Weighted Avg %"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700; font-size: 1rem !important;"
+                                id="statSurvived">0
+                                (0%)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Working Days -->
+                <div class="card" onclick="openAnalytics('days')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#fff3e0; color:#ef6c00; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Working Days <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('days')"
+                                    title="Total Days Elapsed"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="statDays">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Missing Billing Inputs -->
+                <div class="card" onclick="openAnalytics('missing')">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div
+                            style="background:#ffebee; color:#c62828; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div
+                                style="font-size:0.7rem; color:var(--text-medium); display:flex; justify-content:space-between; align-items:center;">
+                                Missing Inputs <i class="fas fa-info-circle" style="font-size:0.6rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showFormula('missing')"
+                                    title="Click to view POs with missing billings"></i>
+                            </div>
+                            <div class="stat-val" style="font-weight:700;" id="statMissing">0 Issues</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sheet-tabs-container" id="tabContainer"></div>
+
+            <div class="controls-bar">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="checkbox" id="editMode" class="toggle-switch" onchange="toggleEditMode()">
+                    <label for="editMode" style="font-weight:600; cursor:pointer; font-size: 0.8rem;">Edit Mode</label>
+                    <div style="width:1px; height:20px; background:#ddd; margin:0 1rem;"></div>
+
+                    <div class="view-toggles" id="viewTogglesContainer">
+                        <button class="view-btn" id="btn-mobi" onclick="openStageModal('mobi')"><i
+                                class="fas fa-truck-loading"></i> 15% Mobilization</button>
+                        <button class="view-btn" id="btn-bill1" onclick="openStageModal('bill1')"><i
+                                class="fas fa-file-invoice-dollar"></i> 1st Billing</button>
+                        <button class="view-btn" id="btn-bill2" onclick="openStageModal('bill2')"><i
+                                class="fas fa-file-invoice-dollar"></i> 2nd Billing</button>
+                        <button class="view-btn" id="btn-bill3" onclick="openStageModal('bill3')"><i
+                                class="fas fa-file-invoice-dollar"></i> 3rd Billing</button>
+                        <!-- Dynamic billings will be inserted here -->
+                        <button class="view-btn" id="btn-add-bill" onclick="addNewBillingStage()"
+                            style="display:none; color:#2E7D32; background:#E8F5E9;"><i
+                                class="fas fa-plus"></i></button>
+
+                        <button class="view-btn" id="btn-avg" onclick="openStageModal('avg')"><i
+                                class="fas fa-chart-line"></i> Average</button>
+                        <div style="width:1px; height:20px; background:#ccc; margin:0 4px;"></div>
+                        <button class="view-btn" id="btn-all" onclick="toggleViewAll()"><i
+                                class="fas fa-expand-arrows-alt"></i> View All Data</button>
+                    </div>
+
+                    <div style="width:1px; height:20px; background:#ddd; margin:0 1rem;"></div>
+                    <span id="editStatusText" style="color:var(--text-light); font-size:0.75rem;"> Modify/Paste Data
+                    </span>
+                    <button class="btn btn-outline"
+                        style="margin-left: 1rem; padding: 6px 12px; font-size: 0.75rem; border-radius: 4px; display: none;"
+                        onclick="openTargetsModal()"> <i class="fas fa-cog"></i> Settings </button>
+                </div>
+                <div style="font-size: 0.75rem; color: #2E7D32; font-weight:600;"> Sheet: <span id="activeSheetLabel"
+                        style="text-decoration:underline;">PENRO Palawan</span> </div>
+            </div>
+
+            <div class="sheet-container" tabindex="0" id="pasteZone" style="outline:none;">
+                <table class="sheet-table" id="mainTable">
+                    <thead id="tableHeader"></thead>
+                    <tbody id="sheetBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Defaults
+        const DEFAULT_SHEETS = ["PENRO Palawan", "Puerto Princesa", "Coron", "Roxas", "Brookes Point", "Taytay", "Quezon"];
+        const STAGE_SUBHEADERS = [
+            "sampling size (Ha)",
+            "sampling Intensity (% validation)",
+            "No of Seedlings Planted (Expected)",
+            "No of Seedlings Survived",
+            "% Survival",
+            "Date Requested For Validation (by PO)",
+            "Date Letter from PO received (by Office)",
+            "Date Validated",
+            "Date of Geotagged Photos",
+            "Date of Inspection Report",
+            "Date of Certification of Inspection and Acceptance",
+            "Days Elapsed"
+        ];
+
+        const AVG_SUBHEADERS = [
+            "sampling size (Ha)",
+            "sampling Intensity (% validation)",
+            "No of Seedlings Planted (Expected)",
+            "No of Seedlings Survived",
+            "% Survival",
+            "Working days Elpased",
+            "Final Survival Rate (%) for the last year"
+        ];
+
+        const DEFAULT_HEADERS = [
+            { name: "REGION", sub: [] },
+            { name: "PENRO", sub: [] },
+            { name: "CENRO", sub: [] },
+            { name: "Year Contracted", sub: [] },
+            { name: "Year M&P", sub: [] },
+            { name: "Name of PO/Contractor", sub: [] },
+            { name: "Contract Code", sub: [] },
+            { name: "Commodity", sub: [] },
+            { name: "Species Planted", sub: [] },
+            { name: "Area Contracted (Ha)", sub: [] },
+            { name: "Final Area Maintained and Protected (Ha)", sub: [] },
+            { name: "Final % Area maintained and Protected", sub: [] },
+            { name: "No. of Seedlings Planted (per Contract)", sub: [] },
+            { name: "15% Mobilization", sub: STAGE_SUBHEADERS },
+            { name: "1st Billing", sub: STAGE_SUBHEADERS },
+            { name: "2nd Billing", sub: STAGE_SUBHEADERS },
+            { name: "3rd Billing", sub: STAGE_SUBHEADERS },
+            { name: "AVERAGE", sub: AVG_SUBHEADERS }
+        ];
+
+        let activeView = 'base'; // 'base' (only first 12), 'all' (everything)
+
+        let activeSheet = "PENRO Palawan";
+        let isEditMode = false;
+        let rowToDelete = null;
+        let colToDelete = null;
+        let tabToDelete = null;
+
+        // Dynamic State
+        let ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+        let SHEET_HEADERS = [...DEFAULT_HEADERS];
+        let SHEET_DATABASE = {};        // Maps to MAINTENANCE_PROTECTION_DATABASE
+        let SHEET_TARGETS = {};         // Maps to MAINTENANCE_PROTECTION_TARGETS
+        let SHEET_CUSTOM_HEADERS = {};  // Maps to MAINTENANCE_PROTECTION_CUSTOM_HEADERS
+
+        let HISTORY_STACK = [];
+        let insertMonthTarget = { startIndex: -1, endIndex: -1 };
+
+        // HELPER: Safely trim any value
+        function safeTrim(val) {
+            if (val === null || val === undefined) return "";
+            return String(val).trim();
+        }
+
+        // GLOBAL HELPER: Detection for header rows (Disabled for M&P)
+        function isHeaderRow(row, activeSheetName) {
+            return false;
+        }
+
+        // STUBS FOR ANALYTICS (Requested by user)
+        // IMPLEMENTED ANALYTICS
+        function openAnalytics(type) {
+            const modal = document.getElementById('chartModal') || createChartModal();
+            const title = document.getElementById('chartTitle');
+            const canvas = document.getElementById('analyticsChart');
+            const db = SHEET_DATABASE || {};
+
+            if (window.activeMPChart) window.activeMPChart.destroy();
+
+            // REGISTER PLUGIN (Fix for Chart.js 3+)
+            Chart.register(ChartDataLabels);
+
+            let labels = [];
+            let dataValues = [];
+            let labelStr = "";
+
+            // Setup Data
+            // Indices: Planted=63, Survived=64, Days=66
+            // Categories: TABS (Districts)
+
+            const tabs = Object.keys(db);
+
+            tabs.forEach(tab => {
+                let total = 0;
+                let count = 0;
+                (db[tab] || []).forEach(row => {
+                    // Check if row is valid
+                    if (!row || row.length < 5) return;
+
+                    if (type === 'planted') {
+                        total += parseFloat((row[63] || "").toString().replace(/,/g, '')) || 0;
+                    } else if (type === 'survival') {
+                        let s = parseFloat((row[64] || "").toString().replace(/,/g, '')) || 0;
+                        // Wait, survival rate is calculated or raw? 
+                        // Usually we just sum survivors for the bar chart
+                        total += s;
+                    } else if (type === 'days') {
+                        total += parseFloat((row[66] || "").toString().replace(/,/g, '')) || 0;
+                    } else if (type === 'missing') {
+                        // Check empty blocks
+                        const isBlockEmpty = (startIdx) => {
+                            for (let i = 0; i < 5; i++) {
+                                if (row[startIdx + i] && row[startIdx + i].toString().trim() !== "") return false;
+                            }
+                            return true;
+                        };
+                        // Indices for mobi(13), bill1(25), bill2(37), bill3(49) ... NEED DYNAMIC
+                        // For now, hardcode standard check or verify logic
+                        // If we use standard logic: active if name/contract present
+                        let active = (row[5] || row[1] || row[2]);
+                        if (active) {
+                            // Check first 3 billings as a proxy? Or check ALL known billing headers?
+                            // Simple check: Index 25 (1st Bill)
+                            if (isBlockEmpty(25)) count++;
+                        }
+                    }
+                });
+
+                if (type === 'missing') {
+                    if (count > 0) { labels.push(tab); dataValues.push(count); }
+                } else if (total > 0) {
+                    labels.push(tab);
+                    dataValues.push(total);
+                }
+            });
+
+            if (type === 'planted') labelStr = "Expected Planted";
+            else if (type === 'survival') labelStr = "Seedlings Survived";
+            else if (type === 'days') labelStr = "Total Working Days";
+            else if (type === 'missing') labelStr = "Count of POs with Missing Inputs";
+
+            title.innerText = labelStr + " by District";
+
+            modal.classList.add('show');
+            const ctx = canvas.getContext('2d');
+
+            const palette = ['#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0'];
+
+            window.activeMPChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: labelStr,
+                        data: dataValues,
+                        backgroundColor: palette.slice(0, labels.length),
+                        borderRadius: 6
+                    }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const cat = labels[index];
+                            openDrilldown(cat, type);
+                        }
+                    },
+                    plugins: {
+                        datalabels: {
+                            color: '#fff',
+                            textShadowColor: 'black',
+                            textShadowBlur: 4,
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (v) => v.toLocaleString()
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { display: false, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function openDrilldown(district, metricType) {
+            const db = SHEET_DATABASE || {};
+            const rows = db[district] || [];
+            const listContainer = document.getElementById('drilldownList');
+            const title = document.getElementById('drilldownTitle');
+            const totalLabel = document.getElementById('drilldownTotal');
+            const modal = document.getElementById('drilldownModal');
+
+            let metricName = metricType === 'planted' ? 'Expected Planted' :
+                metricType === 'survival' ? 'Seedlings Survived' :
+                    metricType === 'days' ? 'Working Days' : 'Issues';
+
+            title.innerText = `${district} - ${metricName}`;
+            listContainer.innerHTML = '';
+
+            let items = [];
+            let total = 0;
+
+            rows.forEach(row => {
+                if (!row || row.length < 5) return;
+
+                let poName = row[5] || "Unknown PO";
+                let val = 0;
+
+                if (metricType === 'planted') {
+                    val = parseFloat((row[63] || "").toString().replace(/,/g, '')) || 0;
+                } else if (metricType === 'survival') {
+                    val = parseFloat((row[64] || "").toString().replace(/,/g, '')) || 0;
+                } else if (metricType === 'days') {
+                    val = parseFloat((row[66] || "").toString().replace(/,/g, '')) || 0;
+                } else if (metricType === 'missing') {
+                    // Check missing
+                    const isBlockEmpty = (startIdx) => {
+                        for (let i = 0; i < 5; i++) {
+                            if (row[startIdx + i] && row[startIdx + i].toString().trim() !== "") return false;
+                        }
+                        return true;
+                    };
+                    let active = (row[5] || row[1] || row[2]);
+                    if (active && isBlockEmpty(25)) val = 1;
+                }
+
+                if (val > 0) {
+                    items.push({ name: poName, val: val });
+                    total += val;
+                }
+            });
+
+            // Sort desc
+            items.sort((a, b) => b.val - a.val);
+
+            if (items.length === 0) listContainer.innerHTML = "<div style='text-align:center; padding:20px; color:#888;'>No records found.</div>";
+            else {
+                items.forEach(item => {
+                    let valStr = item.val.toLocaleString();
+                    if (metricType === 'missing') valStr = "Missing Input";
+                    listContainer.innerHTML += `
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+                            <span style="font-weight:600; color:#444;">${item.name}</span>
+                            <span style="font-weight:700; color:#2e7d32;">${valStr}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            if (metricType === 'missing') totalLabel.innerText = `Count: ${total}`;
+            else totalLabel.innerText = `TOTAL: ${total.toLocaleString()}`;
+
+            modal.classList.add('show');
+        }
+
+        function closeDrilldownModal() {
+            document.getElementById('drilldownModal').classList.remove('show');
+        }
+
+        function createChartModal() {
+            // Helper to create modal if it doesn't exist (similar to other pages)
+            let div = document.createElement('div');
+            div.id = 'chartModal';
+            div.className = 'modal-overlay';
+            div.style.zIndex = '10005';
+            div.innerHTML = `
+            <div class="modal-box" style="width: 95%; max-width: 800px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="chartTitle">Analytics</h3>
+                    <button onclick="document.getElementById('chartModal').classList.remove('show')" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                </div>
+                <div style="height:400px; position:relative;">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>`;
+            document.body.appendChild(div);
+            return div;
+        }
+
+        function showFormula(type) {
+            let msg = "";
+            if (type === 'planted') msg = "Sum of 'No of Seedlings Planted (Expected)' column (Index 63).";
+            if (type === 'survival') msg = "Sum of 'No of Seedlings Survived' column (Index 64).";
+            if (type === 'days') msg = "Sum of 'Days Elapsed' column (Index 66).";
+
+            // Create simple alert modal
+            alert(msg);
+        }
+
+        window.addEventListener('load', async () => {
+            const loading = document.getElementById('loadingOverlay');
+            try {
+                await DBService.init();
+
+                // Load Headers
+                let storedHeaders = await DBService.get('MP_HEADERS_DYN');
+                if (storedHeaders && storedHeaders.length > 0) SHEET_HEADERS = storedHeaders;
+                else SHEET_HEADERS = [...DEFAULT_HEADERS];
+
+                // Render Buttons based on loaded Headers
+                renderDynamicButtons();
+
+                // Load Active Sheets List
+                let storedSheets = await DBService.get('MP_ACTIVE_SHEETS_LIST');
+                if (storedSheets && storedSheets.length > 0) ACTIVE_SHEETS = storedSheets;
+                else ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+
+                // Load Database
+                let storedDB = await DBService.get('MAINTENANCE_PROTECTION_DATABASE');
+                if (!storedDB || Object.keys(storedDB).length === 0) {
+                    storedDB = {};
+                    ACTIVE_SHEETS.forEach(sheet => storedDB[sheet] = generateDefaultSheetData());
+                } else {
+                    // Ensure active sheets exist
+                    ACTIVE_SHEETS.forEach(sheet => { if (!storedDB[sheet]) storedDB[sheet] = generateDefaultSheetData(); });
+                }
+                SHEET_DATABASE = storedDB;
+
+                SHEET_TARGETS = await DBService.get('MAINTENANCE_PROTECTION_TARGETS') || {};
+                ACTIVE_SHEETS.forEach(s => { if (!SHEET_TARGETS[s]) SHEET_TARGETS[s] = 5; });
+
+                SHEET_CUSTOM_HEADERS = await DBService.get('MAINTENANCE_PROTECTION_CUSTOM_HEADERS') || {};
+
+                // Default active sheet
+                if (!ACTIVE_SHEETS.includes(activeSheet) && ACTIVE_SHEETS.length > 0) activeSheet = ACTIVE_SHEETS[0];
+
+                renderTabs();
+            } catch (err) { console.error(err); alert("Fatal Error: " + err); } finally { loading.style.display = 'none'; }
+        });
+
+        function generateDefaultSheetData() {
+            let data = [];
+            let flatCount = getFlatHeaderCount();
+            const blankRow = Array(flatCount).fill("");
+            MONTHS.forEach(m => {
+                data.push([m]);
+                for (let k = 0; k < 5; k++) data.push([...blankRow]);
+            });
+            return data;
+        }
+
+        function getFlatHeaderCount() {
+            let count = 0;
+            SHEET_HEADERS.forEach(h => {
+                if (h.sub && h.sub.length > 0) count += h.sub.length;
+                else count += 1;
+            });
+            return count;
+        }
+
+        // STANDARD FUNCTIONS
+        function pushHistory() {
+            if (!SHEET_DATABASE[activeSheet]) return;
+            let state = JSON.stringify(SHEET_DATABASE[activeSheet]);
+            HISTORY_STACK.push({ sheet: activeSheet, data: state });
+            if (HISTORY_STACK.length > 20) HISTORY_STACK.shift();
+        }
+
+        function undo() {
+            if (HISTORY_STACK.length === 0) return;
+            let lastState = HISTORY_STACK.pop();
+            if (lastState.sheet === activeSheet) {
+                SHEET_DATABASE[activeSheet] = JSON.parse(lastState.data);
+                renderTable();
+                saveToStorage();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+        });
+
+        // TSV PARSER
+        function parseTSV(str) {
+            let rows = []; let r = []; let val = ""; let inQuote = false;
+            for (let i = 0; i < str.length; i++) {
+                let c = str[i]; let next = str[i + 1];
+                if (c === '"') { if (inQuote && next === '"') { val += '"'; i++; } else { inQuote = !inQuote; } }
+                else if (c === '\t' && !inQuote) { r.push(val); val = ""; }
+                else if ((c === '\r' || c === '\n') && !inQuote) { if (c === '\r' && next === '\n') i++; r.push(val); rows.push(r); r = []; val = ""; }
+                else { val += c; }
+            }
+            if (val || r.length > 0) { r.push(val); rows.push(r); }
+            return rows;
+        }
+
+        document.addEventListener('paste', async (e) => {
+            if (!isEditMode) return;
+            const activeEl = document.activeElement;
+            let startRow = -1; let startCol = 0;
+            if (activeEl && activeEl.tagName === 'TD') {
+                const tr = activeEl.parentElement; startRow = parseInt(tr.getAttribute('data-row-index')); startCol = activeEl.cellIndex - 1;
+                if (isNaN(startRow)) startRow = -1;
+            }
+            if (startRow === -1) { alert("Please click a cell to start pasting there."); return; }
+            e.preventDefault();
+            const clipboardText = (e.clipboardData || window.clipboardData).getData('text');
+            if (!clipboardText) return;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingText').innerText = "Analyzing Paste...";
+            try {
+                let rows = parseTSV(clipboardText);
+                while (rows.length > 0 && rows[rows.length - 1].every(cell => !cell || cell.trim() === '')) { rows.pop(); }
+                if (rows.length === 0) { document.getElementById('loadingOverlay').style.display = 'none'; return; }
+
+                let sheetData = SHEET_DATABASE[activeSheet];
+                pushHistory();
+
+                for (let r = 0; r < rows.length; r++) {
+                    let targetRowIdx = startRow + r;
+                    let rowData = rows[r];
+                    if (!sheetData[targetRowIdx]) { sheetData[targetRowIdx] = Array(SHEET_HEADERS.length).fill(""); }
+                    while (sheetData[targetRowIdx].length < SHEET_HEADERS.length) { sheetData[targetRowIdx].push(""); }
+                    for (let c = 0; c < rowData.length; c++) {
+                        let targetColIdx = startCol + c;
+                        if (targetColIdx < SHEET_HEADERS.length) { sheetData[targetRowIdx][targetColIdx] = rowData[c].trim(); }
+                    }
+                }
+                SHEET_DATABASE[activeSheet] = sheetData;
+                await saveToStorage(); renderTable();
+            } catch (err) { console.error(err); alert("Paste Failed: " + err.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+        });
+
+        function toggleEditMode() {
+            isEditMode = document.getElementById('editMode').checked;
+
+            // Show/Hide Edit UI Elements
+            document.getElementById('editStatusText').style.display = isEditMode ? 'inline' : 'none';
+            document.getElementById('btn-add-bill').style.display = isEditMode ? 'inline-flex' : 'none';
+
+            const delButtons = document.querySelectorAll('.delete-row-btn');
+            delButtons.forEach(btn => btn.style.display = isEditMode ? 'inline-block' : 'none');
+
+            document.getElementById('mainPane').classList.toggle('edit-active-block', isEditMode);
+            document.getElementById('mainTable').classList.toggle('edit-active', isEditMode);
+
+            // Re-render to update contenteditable and other UI bits
+            renderTable();
+            renderTabs();
+        }
+
+        function showWarningModal(needed, available) { document.getElementById('warningText').innerText = `You are trying to paste ${needed} rows, but there are only ${available} empty rows left in this block.\n\nSolution:\n1. Click 'OK'\n2. Click the (+) button in the Month Header.\n3. Paste again.`; document.getElementById('warningModal').classList.add('show'); }
+        function closeWarningModal() { document.getElementById('warningModal').classList.remove('show'); }
+
+        function toggleViewAll() {
+            if (activeView === 'all') activeView = 'base';
+            else activeView = 'all';
+
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            if (activeView === 'all') document.getElementById('btn-all').classList.add('active');
+
+            renderTable();
+        }
+
+        function getVisibleRanges() {
+            if (activeView === 'all') return [0, 999]; // show all
+            return [0, 11]; // base view: only first 12 columns
+        }
+
+        let currentModalRange = null;
+        function openStageModal(stage) {
+            const ranges = {
+                'mobi': { title: '15% Mobilization', range: [13, 24], color: '#4CAF50' },
+                'bill1': { title: '1st Billing', range: [25, 36], color: '#2196F3' },
+                'bill2': { title: '2nd Billing', range: [37, 48], color: '#F44336' },
+                'bill3': { title: '3rd Billing', range: [49, 60], color: '#9C27B0' },
+                'avg': { title: 'Average', range: [61, 67], color: '#795548' }
+            };
+
+            const info = ranges[stage];
+            if (!info) return;
+
+            currentModalRange = info.range;
+            document.getElementById('stageModalTitle').innerHTML = `<i class="fas fa-layer-group"></i> ${info.title}`;
+            document.getElementById('stageModalTitle').style.color = info.color;
+            document.getElementById('stageModal').classList.add('show');
+
+            renderStageTable(info.range);
+
+            // Update button active state for visual feedback
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + stage).classList.add('active');
+        }
+
+        function refreshStageTable() {
+            if (currentModalRange) renderStageTable(currentModalRange);
+        }
+
+        function closeStageModal() {
+            document.getElementById('stageModal').classList.remove('show');
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            if (activeView === 'all') document.getElementById('btn-all').classList.add('active');
+            renderTable(); // Refresh main if needed
+        }
+
+        function renderStageTable(range) {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            const hContainer = document.getElementById('stageHeader');
+            const bContainer = document.getElementById('stageBody');
+            const isModalEdit = document.getElementById('modalEditMode').checked;
+
+            // Find index of "Name of PO/Contractor" for reference
+            const refIdx = 5;
+
+            // Generate Header
+            let headHtml = `<tr><th style="width:40px;">#</th><th>PO / Contractor (Ref)</th>`;
+            let flatHeaders = [];
+            SHEET_HEADERS.forEach(h => {
+                if (h.sub && h.sub.length > 0) h.sub.forEach(sh => flatHeaders.push(sh));
+                else flatHeaders.push(h.name || h);
+            });
+
+            for (let j = range[0]; j <= range[1]; j++) {
+                if (flatHeaders[j]) headHtml += `<th>${flatHeaders[j]}</th>`;
+            }
+            headHtml += `</tr>`;
+            hContainer.innerHTML = headHtml;
+
+            // Generate Body
+            let bodyHtml = '';
+            data.forEach((row, i) => {
+                let poName = row[refIdx] || '-';
+                bodyHtml += `<tr><td style="text-align:center; font-size:0.7rem; color:#888;">${i + 1}</td><td style="background:#f9f9f9; font-weight:600; font-size:0.75rem;">${poName}</td>`;
+                for (let j = range[0]; j <= range[1]; j++) {
+                    let val = row[j] || "";
+                    let contentEditable = isModalEdit ? 'contenteditable="true"' : '';
+                    bodyHtml += `<td ${contentEditable} onblur="saveCell(${i}, ${j}, this.innerText)" style="font-size:0.75rem; ${isModalEdit ? 'background:#fffde7;' : ''}">${val}</td>`;
+                }
+                bodyHtml += `</tr>`;
+            });
+            bContainer.innerHTML = bodyHtml;
+        }
+
+        function renderTable() {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            const headerContainer = document.getElementById('tableHeader');
+            const bodyContainer = document.getElementById('sheetBody');
+            if (!headerContainer || !bodyContainer) return;
+
+            const minIdx = 0;
+            const maxIdx = (activeView === 'all') ? 999 : 11;
+
+            const isVisible = (globalIdx) => {
+                if (activeView === 'all') return true;
+                return globalIdx >= minIdx && globalIdx <= maxIdx;
+            };
+
+            const getHeaderClass = (index) => {
+                if (index === 13) return 'head-mobi';
+                if (index === 14) return 'head-bill1';
+                if (index === 15) return 'head-bill2';
+                if (index === 16) return 'head-bill3';
+                if (index === 17) return 'head-avg';
+                return '';
+            };
+
+            const getSubHeaderClass = (mainIdx) => {
+                if (mainIdx === 13) return 'sub-mobi';
+                if (mainIdx === 14) return 'sub-bill1';
+                if (mainIdx === 15) return 'sub-bill2';
+                if (mainIdx === 16) return 'sub-bill3';
+                if (mainIdx === 17) return 'sub-avg';
+                return '';
+            };
+
+            // DYNAMIC HEADER RENDER
+            let hasSub = SHEET_HEADERS.some((h, i) => isVisibleMain(i) && h.sub && h.sub.length > 0);
+
+            function isVisibleMain(mainIdx) {
+                let startFlat = 0;
+                for (let i = 0; i < mainIdx; i++) {
+                    let prevH = SHEET_HEADERS[i];
+                    startFlat += (prevH.sub && prevH.sub.length > 0) ? prevH.sub.length : 1;
+                }
+                let len = (SHEET_HEADERS[mainIdx].sub && SHEET_HEADERS[mainIdx].sub.length > 0) ? SHEET_HEADERS[mainIdx].sub.length : 1;
+                for (let k = 0; k < len; k++) { if (isVisible(startFlat + k)) return true; }
+                return false;
+            }
+
+            let headerHtml = '<tr><th rowspan="' + (hasSub ? 2 : 1) + '" style="width:40px;">#</th>';
+
+            let currentFlatIdx = 0;
+            SHEET_HEADERS.forEach((h, index) => {
+                let name = typeof h === 'string' ? h : h.name;
+                let subLen = (h.sub && h.sub.length > 0) ? h.sub.length : 0;
+                let visibleSubsCount = 0;
+                if (subLen > 0) {
+                    h.sub.forEach((sh, sidx) => { if (isVisible(currentFlatIdx + sidx)) visibleSubsCount++; });
+                } else {
+                    if (isVisible(currentFlatIdx)) visibleSubsCount = 1;
+                }
+
+                if (visibleSubsCount > 0) {
+                    let rowspan = (hasSub && subLen === 0) ? 2 : 1;
+                    let colspan = visibleSubsCount;
+                    let safeName = name.replace(/'/g, "\\'");
+                    let delBtn = isEditMode ? `<i class="fas fa-times" style="margin-left:5px; color:#ef5350; cursor:pointer;" onclick="openDeleteColModal(${index}, '${safeName}')"></i>` : '';
+                    let addSubBtn = isEditMode ? `<i class="fas fa-plus-square" style="margin-left:5px; color:#1e88e5; cursor:pointer;" onclick="addSubHeader(${index})" title="Add Sub-header"></i>` : '';
+
+                    let content = (isEditMode && index >= 13 && index <= 17)
+                        ? name
+                        : (isEditMode ? `<span contenteditable="true" onblur="renameHeader(${index}, this.innerText)" onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}">${name}</span>` : name);
+
+                    let thClass = (activeView === 'all') ? getHeaderClass(index) : '';
+                    headerHtml += `<th class="${thClass}" rowspan="${rowspan}" colspan="${colspan}">${content} ${delBtn}${addSubBtn}</th>`;
+                }
+                currentFlatIdx += (subLen > 0 ? subLen : 1);
+            });
+            if (isEditMode) {
+                headerHtml += `<th rowspan="${hasSub ? 2 : 1}" style="width:40px; cursor:pointer; background:#fff3e0; color:#ef6c00;" onclick="openAddColumnModal()" title="Add Column">+</th>`;
+            }
+            headerHtml += '</tr>';
+
+            if (hasSub) {
+                headerHtml += '<tr>';
+                let flatIdx = 0;
+                SHEET_HEADERS.forEach((h, mainIdx) => {
+                    let subLen = (h.sub && h.sub.length > 0) ? h.sub.length : 1;
+                    if (h.sub && h.sub.length > 0) {
+                        h.sub.forEach((sh, subIdx) => {
+                            if (isVisible(flatIdx + subIdx)) {
+                                let content = isEditMode
+                                    ? `<span contenteditable="true" onblur="renameSubHeader(${mainIdx}, ${subIdx}, this.innerText)" onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}">${sh}</span>`
+                                    : sh;
+                                let delSubBtn = isEditMode ? `<i class="fas fa-times" style="margin-left:3px; color:#ef5350; font-size:0.6rem; cursor:pointer;" onclick="deleteSubHeader(${mainIdx}, ${subIdx})"></i>` : '';
+                                let subClass = (activeView === 'all') ? getSubHeaderClass(mainIdx) : '';
+                                headerHtml += `<th class="${subClass}" style="font-size:0.7rem;">${content} ${delSubBtn}</th>`;
+                            }
+                        });
+                    }
+                    flatIdx += subLen;
+                });
+                headerHtml += '</tr>';
+            }
+            headerContainer.innerHTML = headerHtml;
+
+            let html = '';
+            let totalFlatCount = getFlatHeaderCount();
+
+            let headerEndIndices = {}; let lastH = -1;
+            for (let i = 0; i < data.length; i++) { if (isHeaderRow(data[i], activeSheet)) { if (lastH !== -1) headerEndIndices[lastH] = i - 1; lastH = i; } }
+            if (lastH !== -1) headerEndIndices[lastH] = data.length - 1;
+
+            let visibleFlatCount = 0;
+            for (let j = 0; j < totalFlatCount; j++) if (isVisible(j)) visibleFlatCount++;
+
+            for (let i = 0; i < data.length; i++) {
+                let row = data[i] || [];
+                if (row.length < totalFlatCount) { while (row.length < totalFlatCount) row.push(""); }
+
+                html += `<tr data-row-index="${i}" onmouseover="showRowTooltip(event, ${i})" onmouseout="hideTooltip()"><td style="text-align:center; color:#757575; font-size:0.7rem;">${i + 1} ${isEditMode ? `<i class="fas fa-trash-alt delete-row-btn" onclick="confirmDeleteRow(${i})"></i>` : ''}</td>`;
+                for (let j = 0; j < totalFlatCount; j++) {
+                    if (!isVisible(j)) continue;
+                    let cellVal = row[j] || ""; let contentEditable = isEditMode ? 'contenteditable="true"' : ''; let tabindex = isEditMode ? 'tabindex="0"' : '';
+                    html += `<td ${contentEditable} ${tabindex} onblur="saveCell(${i}, ${j}, this.innerText)">${cellVal}</td>`;
+                }
+                if (isEditMode) html += `<td style="background:#f9f9f9;"></td>`;
+                html += `</tr>`;
+            }
+            bodyContainer.innerHTML = html;
+            document.getElementById('activeSheetLabel').textContent = activeSheet;
+
+            // UPDATE STATS
+            updateStats();
+        }
+
+        // DYNAMIC BILLING STAGE LOGIC
+        async function addNewBillingStage() {
+            let stageName = prompt("Enter Name for New Billing Stage (e.g., '4th Billing'):", "4th Billing");
+            if (!stageName) return;
+            stageName = stageName.trim();
+
+            // Validate name (simple check)
+            let existing = SHEET_HEADERS.find(h => (h.name || h) === stageName);
+            if (existing) { alert("Stage already exists!"); return; }
+
+            pushHistory();
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            // 1. Define Structure
+            // Insert it BEFORE "AVERAGE" (which is usually the last one)
+            // Default assumes headers structure: [..., 3rd Billing, AVERAGE]
+            let avgIdx = SHEET_HEADERS.findIndex(h => (h.name || h) === 'AVERAGE');
+            if (avgIdx === -1) avgIdx = SHEET_HEADERS.length; // Fallback
+
+            const newHeader = {
+                name: stageName,
+                sub: [...STAGE_SUBHEADERS] // Clone standard subheaders
+            };
+
+            // 2. Insert into Header Array
+            SHEET_HEADERS.splice(avgIdx, 0, newHeader);
+
+            // 3. Insert Empty Data Columns
+            // We need to calculate where to insert in the FLAT data array.
+            // Calculate start index of Average block
+            let flatIdx = 0;
+            for (let i = 0; i < avgIdx; i++) {
+                let h = SHEET_HEADERS[i];
+                flatIdx += (h.sub && h.sub.length > 0) ? h.sub.length : 1;
+            }
+
+            // Insert 12 empty cells (length of STAGE_SUBHEADERS)
+            const emptyBlock = Array(12).fill("");
+
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => {
+                    // Ensure row is long enough before splicing? 
+                    // Usually safe to just splice.
+                    row.splice(flatIdx, 0, ...emptyBlock);
+                });
+            }
+
+            // 4. Save & Render
+            await saveToStorage();
+            renderDynamicButtons(); // Refresh buttons
+            renderTable();
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function renderDynamicButtons() {
+            const container = document.getElementById('viewTogglesContainer');
+            if (!container) return;
+
+            let html = '';
+            const iconMap = {
+                '15% Mobilization': 'fas fa-truck-loading',
+                '1st Billing': 'fas fa-file-invoice-dollar',
+                '2nd Billing': 'fas fa-file-invoice-dollar',
+                '3rd Billing': 'fas fa-file-invoice-dollar',
+                'AVERAGE': 'fas fa-chart-line'
+            };
+
+            let ignoredHeaders = ["REGION", "PENRO", "CENRO", "Year Contracted", "Year M&P", "Name of PO/Contractor", "Contract Code", "Commodity", "Species Planted", "Area Contracted (Ha)", "Final Area Maintained and Protected (Ha)", "Final % Area maintained and Protected", "No. of Seedlings Planted (per Contract)", "AVERAGE"];
+
+            SHEET_HEADERS.forEach((h, index) => {
+                let name = h.name || h;
+                if (!ignoredHeaders.includes(name) && h.sub && h.sub.length > 0) {
+                    let btnId = 'btn-' + name.replace(/[^a-zA-Z0-9]/g, '');
+                    let icon = iconMap[name] || 'fas fa-file-invoice';
+                    html += `<button class="view-btn" id="${btnId}" onclick="openStageModalByName('${name}')"><i class="${icon}"></i> ${name}</button>`;
+                }
+            });
+
+            // Add Billing button
+            html += `<button class="view-btn" id="btn-add-bill" onclick="addNewBillingStage()" style="display:none; color:#2E7D32; background:#E8F5E9;"><i class="fas fa-plus"></i></button>`;
+
+            // Add Average and View All
+            html += `<button class="view-btn" id="btn-avg" onclick="openStageModal('avg')"><i class="fas fa-chart-line"></i> Average</button>
+                     <div style="width:1px; height:20px; background:#ccc; margin:0 4px;"></div>
+                     <button class="view-btn" id="btn-all" onclick="toggleViewAll()"><i class="fas fa-expand-arrows-alt"></i> View All Data</button>`;
+
+            container.innerHTML = html;
+            toggleEditMode();
+        }
+
+        // UPDATED MODAL OPENER
+        let currentStageName = "";
+
+        function openStageModalByName(stageName) {
+            // Find the header index and range
+            let startFlat = 0;
+            let found = false;
+            let rangeLen = 0;
+
+            for (let h of SHEET_HEADERS) {
+                let hName = h.name || h;
+                let subLen = (h.sub && h.sub.length > 0) ? h.sub.length : 1;
+
+                if (hName === stageName) {
+                    found = true;
+                    rangeLen = subLen;
+                    break;
+                }
+                startFlat += subLen;
+            }
+
+            if (!found) return;
+
+            let endFlat = startFlat + rangeLen - 1;
+            currentModalRange = [startFlat, endFlat];
+            currentStageName = stageName;
+
+            document.getElementById('stageModalTitle').innerHTML = `<i class="fas fa-layer-group"></i> ${stageName}`;
+            document.getElementById('stageModal').classList.add('show');
+
+            renderStageTable(currentModalRange);
+
+            // Highlight button
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            let btnId = 'btn-' + stageName.replace(/[^a-zA-Z0-9]/g, '');
+            let btn = document.getElementById(btnId);
+            if (btn) btn.classList.add('active');
+        }
+
+        // COMPATIBILITY WRAPPER (for old buttons if any exist)
+        function openStageModal(oldKey) {
+            const map = {
+                'mobi': '15% Mobilization',
+                'bill1': '1st Billing',
+                'bill2': '2nd Billing',
+                'bill3': '3rd Billing',
+                'avg': 'AVERAGE'
+            };
+            if (map[oldKey]) openStageModalByName(map[oldKey]);
+        }
+
+        let saveTimeout;
+        function showSaveIndicator() {
+            const ind = document.getElementById('updateIndicator');
+            if (!ind) return;
+            ind.innerHTML = '<i class="fas fa-save"></i> Saving to Database...';
+            ind.style.display = 'block';
+            ind.style.background = '#E3F2FD';
+            ind.style.color = '#1565C0';
+            ind.style.borderColor = '#90CAF9';
+
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                ind.style.display = 'none';
+            }, 1000);
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('tabContainer'); if (!container) return;
+            container.innerHTML = '';
+            ACTIVE_SHEETS.forEach(sheetName => {
+                const div = document.createElement('div');
+                div.className = `sheet-tab ${sheetName === activeSheet ? 'active' : ''}`;
+                div.id = `tab-${sheetName}`;
+
+                // Click to switch, but prevent switching if clicking the editable span
+                div.onclick = (e) => {
+                    if (e.target.classList.contains('fa-times') || e.target.getAttribute('contenteditable') === 'true') return;
+                    switchTab(sheetName);
+                };
+
+                let delIcon = isEditMode ? `<i class="fas fa-times" style="margin-left:8px; color:#ef5350; cursor:pointer;" onclick="openDeleteTabModal('${sheetName}')"></i>` : '';
+
+                let nameHtml = isEditMode
+                    ? `<span class="tab-name" contenteditable="true" onblur="renameTab('${sheetName}', this.innerText)" onkeydown="if(event.key==='Enter'){this.blur();event.preventDefault();}">${sheetName}</span>`
+                    : `<span class="tab-name">${sheetName}</span>`;
+
+                div.innerHTML = `<i class="fas fa-folder" style="font-size:0.8rem; opacity:0.7;"></i> ${nameHtml} ${delIcon}`;
+                container.appendChild(div);
+            });
+            if (isEditMode) {
+                container.innerHTML += `<div class="sheet-tab" style="width:40px; justify-content:center; color:#2E7D32; background:#E8F5E9;" onclick="openAddTabModal()">+</div>`;
+            }
+            if (activeSheet) renderTable();
+        }
+
+        async function renameTab(oldName, newName) {
+            newName = newName.trim();
+            if (!newName || newName === oldName) { renderTabs(); return; }
+            if (ACTIVE_SHEETS.includes(newName)) { alert("Sheet name already exists!"); renderTabs(); return; }
+
+            // Update ACTIVE_SHEETS
+            const idx = ACTIVE_SHEETS.indexOf(oldName);
+            if (idx !== -1) ACTIVE_SHEETS[idx] = newName;
+
+            // Update SHEET_DATABASE
+            SHEET_DATABASE[newName] = SHEET_DATABASE[oldName];
+            delete SHEET_DATABASE[oldName];
+
+            // Update Targets & Custom Headers
+            if (SHEET_TARGETS[oldName]) {
+                SHEET_TARGETS[newName] = SHEET_TARGETS[oldName];
+                delete SHEET_TARGETS[oldName];
+            }
+            if (SHEET_CUSTOM_HEADERS[oldName]) {
+                SHEET_CUSTOM_HEADERS[newName] = SHEET_CUSTOM_HEADERS[oldName];
+                delete SHEET_CUSTOM_HEADERS[oldName];
+            }
+
+            if (activeSheet === oldName) activeSheet = newName;
+
+            await saveToStorage();
+            renderTabs();
+        }
+
+        async function renameHeader(index, newName) {
+            newName = newName.trim();
+            if (!newName) { renderTable(); return; }
+            if (typeof SHEET_HEADERS[index] === 'string') SHEET_HEADERS[index] = { name: newName, sub: [] };
+            else SHEET_HEADERS[index].name = newName;
+            await saveToStorage();
+            renderTable();
+        }
+
+        async function renameSubHeader(mainIdx, subIdx, newName) {
+            newName = newName.trim();
+            if (!newName) { renderTable(); return; }
+            SHEET_HEADERS[mainIdx].sub[subIdx] = newName;
+            await saveToStorage();
+            renderTable();
+        }
+
+        async function addSubHeader(mainIdx) {
+            let name = prompt("Enter Sub-header name:");
+            if (!name) return;
+            pushHistory();
+
+            let h = SHEET_HEADERS[mainIdx];
+            if (typeof h === 'string') h = SHEET_HEADERS[mainIdx] = { name: h, sub: [] };
+
+            // Calculate where to insert in the flat data
+            let flatIdx = 0;
+            for (let i = 0; i < mainIdx; i++) {
+                let prevH = SHEET_HEADERS[i];
+                flatIdx += (prevH.sub && prevH.sub.length > 0) ? prevH.sub.length : 1;
+            }
+            flatIdx += h.sub.length; // Insert at the end of current subs
+
+            h.sub.push(name);
+
+            // Update data rows to include a new empty column at flatIdx
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => {
+                    if (row && !isHeaderRow(row, sheetKey)) {
+                        row.splice(flatIdx, 0, "");
+                    }
+                });
+            }
+
+            await saveToStorage();
+            renderTable();
+        }
+
+        async function deleteSubHeader(mainIdx, subIdx) {
+            if (!confirm("Delete this sub-header and its data?")) return;
+            pushHistory();
+
+            let h = SHEET_HEADERS[mainIdx];
+            let flatIdx = 0;
+            for (let i = 0; i < mainIdx; i++) {
+                let prevH = SHEET_HEADERS[i];
+                flatIdx += (prevH.sub && prevH.sub.length > 0) ? prevH.sub.length : 1;
+            }
+            flatIdx += subIdx;
+
+            h.sub.splice(subIdx, 1);
+
+            // Remove data column
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => {
+                    if (row && !isHeaderRow(row, sheetKey) && row.length > flatIdx) {
+                        row.splice(flatIdx, 1);
+                    }
+                });
+            }
+
+            await saveToStorage();
+            renderTable();
+        }
+
+        function switchTab(sheetName) { activeSheet = sheetName; renderTabs(); }
+
+
+        function saveCell(rowIndex, colIndex, value) {
+            pushHistory();
+            if (!SHEET_DATABASE[activeSheet][rowIndex]) SHEET_DATABASE[activeSheet][rowIndex] = [];
+            let flatCount = getFlatHeaderCount();
+            while (SHEET_DATABASE[activeSheet][rowIndex].length < flatCount) SHEET_DATABASE[activeSheet][rowIndex].push("");
+            SHEET_DATABASE[activeSheet][rowIndex][colIndex] = value;
+
+            // Trigger Average Calculation if editing Billing columns
+            // Billing 1: 25-36, Billing 2: 37-48, Billing 3: 49-60
+            if (colIndex >= 25 && colIndex <= 60) {
+                updateAverages(rowIndex);
+            }
+
+            saveToStorage();
+            updateStats();
+        }
+
+        function updateAverages(rowIndex) {
+            let row = SHEET_DATABASE[activeSheet][rowIndex];
+            if (!row) return;
+
+            // Helper to parse float safely
+            const val = (idx) => {
+                let v = parseFloat((row[idx] || "").toString().replace(/,/g, ''));
+                return isNaN(v) ? 0 : v;
+            };
+
+            // Indices
+            // B1: Size=25, Int=26, Plant=27, Surv=28, %=29, Days=36
+            // B2: Size=37, Int=38, Plant=39, Surv=40, %=41, Days=48
+            // B3: Size=49, Int=50, Plant=51, Surv=52, %=53, Days=60
+
+            // Average Targets (Indices 61-67)
+            // 61: Sum Size
+            // 62: Sum Intensity
+            // 63: Sum Planted
+            // 64: Sum Survived
+            // 65: Avg % (Recalculated)
+            // 66: Sum Days
+            // 67: Final Rate (= B3 %)
+
+            // 1. Sum Calculations
+            let sumSize = val(25) + val(37) + val(49);
+            let sumInt = val(26) + val(38) + val(50);
+            let sumPlant = val(27) + val(39) + val(51);
+            let sumSurv = val(28) + val(40) + val(52);
+            let sumDays = val(36) + val(48) + val(60);
+
+            // 2. Calculate Avg % Survival (Total Surv / Total Planted)
+            let avgPct = 0;
+            if (sumPlant > 0) {
+                avgPct = (sumSurv / sumPlant) * 100;
+            }
+
+            // 3. Final Rate is just Billing 3 % Survival
+            let finalRate = row[53] || "";
+            // Note: If row[52] is calculated, it might be better to use val(52), but usually it's input or calc'd. Keeping as string/exact value.
+
+            // SET VALUES
+            row[61] = sumSize > 0 ? sumSize : "";
+            row[62] = sumInt > 0 ? sumInt : "";
+            row[63] = sumPlant > 0 ? sumPlant : "";
+            row[64] = sumSurv > 0 ? sumSurv : "";
+            row[65] = avgPct > 0 ? avgPct.toFixed(2) + "%" : "";
+            row[66] = sumDays > 0 ? sumDays : "";
+            row[67] = finalRate;
+
+            // If the table is currently rendered, we might need to refresh the UI for this row
+            // But saveCell calls are usually singular.
+            // For now, let's just update the data array. The UI will update on next render or if we force it.
+            // Improv: Update the specific cells in the DOM if valid
+
+            const updateDOM = (cIdx, txt) => {
+                // Try to find cell in Main Table
+                let cell = document.querySelector(`tr[data-row-index="${rowIndex}"] td:nth-child(${cIdx + 2})`); // +2 for Index col + 1-based
+                if (cell) cell.innerText = txt;
+
+                // Try to find cell in Stage Modal (if open and viewing Average)
+                // Stage indices are relative.
+            };
+
+            // Since we are not re-rendering the whole table, the changes won't appear immediately unless we do.
+            // The user didn't ask for instant feedback but it's good UX.
+            // Let's force a renderTable if we can, or just update DOM. 
+            // Calling renderTable is safe but heavy. Let's do DOM update for the Average columns.
+
+            updateDOM(61, row[61]);
+            updateDOM(62, row[62]);
+            updateDOM(63, row[63]);
+            updateDOM(64, row[64]);
+            updateDOM(65, row[65]);
+            updateDOM(66, row[66]);
+            updateDOM(67, row[67]);
+        }
+
+        function confirmDeleteRow(index) { rowToDelete = index; document.getElementById('deleteModal').classList.add('show'); }
+        function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('show'); rowToDelete = null; }
+        function executeDelete() {
+            if (rowToDelete !== null) {
+                pushHistory();
+                SHEET_DATABASE[activeSheet].splice(rowToDelete, 1);
+                saveToStorage(); renderTable(); closeDeleteModal();
+            }
+        }
+
+        // --- STATS LOGIC ---
+        let billingChartInstance = null;
+        let missingBillingData = {
+            '1': [], // List of PO names missing B1
+            '2': [],
+            '3': [],
+            'complete': []
+        };
+
+        function updateStats() {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            let totalPlanted = 0;
+            let totalSurvived = 0;
+            let totalDays = 0;
+            let issueCount = 0;
+
+            // Reset Missing Data
+            missingBillingData = { '1': [], '2': [], '3': [], 'complete': [] };
+
+            data.forEach((row, rowIndex) => {
+                // Skip completely empty rows
+                if (!row || row.every(c => c === "")) return;
+
+                // Helper val
+                const val = (idx) => {
+                    let v = parseFloat((row[idx] || "").toString().replace(/,/g, ''));
+                    return isNaN(v) ? 0 : v;
+                };
+
+                // Sum Average Columns (Planted=63, Survived=64, Days=66)
+                totalPlanted += val(63);
+                totalSurvived += val(64);
+                totalDays += val(66);
+
+                // --- Missing Billing Logic ---
+                // Row is "Active" if it has PO Name (Idx 5) OR PENRO (Idx 1) OR CENRO (Idx 2)
+                let poName = row[5] ? row[5].toString().trim() : "";
+                let penro = row[1] ? row[1].toString().trim() : "";
+                let cenro = row[2] ? row[2].toString().trim() : "";
+
+                let isRowActive = poName !== "" || penro !== "" || cenro !== "";
+
+                // Use a fallback name if PO is empty
+                let displayName = poName || `Row ${rowIndex + 1} (${activeSheet})`;
+
+                if (isRowActive) {
+                    // Helper: Check if a BLOCK of columns is completely empty
+                    // We check Size, Intensity, Planted, Survived, % (5 columns)
+                    const isBlockEmpty = (startIdx) => {
+                        for (let i = 0; i < 5; i++) {
+                            let curr = row[startIdx + i];
+                            if (curr && curr.toString().trim() !== "") return false; // Found data
+                        }
+                        return true; // All empty
+                    };
+
+                    let b1Empty = isBlockEmpty(25); // Billing 1
+                    let b2Empty = isBlockEmpty(37); // Billing 2
+                    let b3Empty = isBlockEmpty(49); // Billing 3
+
+                    let issues = [];
+                    if (b1Empty) { missingBillingData['1'].push(displayName); issues.push("B1"); }
+                    if (b2Empty) { missingBillingData['2'].push(displayName); issues.push("B2"); }
+                    if (b3Empty) { missingBillingData['3'].push(displayName); issues.push("B3"); }
+
+                    if (issues.length > 0) {
+                        issueCount++;
+                    } else {
+                        missingBillingData['complete'].push(displayName);
+                    }
+                }
+            });
+
+            // Update UI
+            document.getElementById('statPlanted').innerText = totalPlanted.toLocaleString();
+
+            let avgSurvRate = 0;
+            if (totalPlanted > 0) avgSurvRate = (totalSurvived / totalPlanted) * 100;
+            document.getElementById('statSurvived').innerText = `${totalSurvived.toLocaleString()} (${avgSurvRate.toFixed(1)}%)`;
+
+            document.getElementById('statDays').innerText = totalDays.toLocaleString();
+
+            document.getElementById('statMissing').innerText = `${issueCount} Issues Found`;
+            document.getElementById('statMissing').style.color = issueCount > 0 ? '#c62828' : '#2e7d32';
+        }
+
+        function updateStats_OLD() {
+            const data = SHEET_DATABASE[activeSheet] || [];
+            let totalPlanted = 0;
+            let totalSurvived = 0;
+            let totalDays = 0;
+            let issueCount = 0;
+
+            // Reset Missing Data
+            missingBillingData = { '1': [], '2': [], '3': [], 'complete': [] };
+
+            data.forEach(row => {
+                // Skip completely empty rows
+                if (!row || row.every(c => c === "")) return;
+
+                // Helper val
+                const val = (idx) => {
+                    let v = parseFloat((row[idx] || "").toString().replace(/,/g, ''));
+                    return isNaN(v) ? 0 : v;
+                };
+
+                // Sum Average Columns (Planted=62, Survived=63, Days=65)
+                totalPlanted += val(62);
+                totalSurvived += val(63);
+                totalDays += val(65);
+
+                // --- Missing Billing Logic ---
+                // Helper check function: returns true if ANY cell in range has value
+                const hasData = (start, end) => {
+                    for (let i = start; i <= end; i++) {
+                        if (row[i] && row[i].toString().trim() !== "") return true;
+                    }
+                    return false;
+                };
+
+                // Helper check function: returns true if ALL cells in main columns are empty
+                // Main columns for checking: Size, Intensity, Planted, Survived, %
+                // B1: 24-28, B2: 36-40, B3: 48-52
+                const isBlockEmpty = (start, rangeLen) => {
+                    for (let i = start; i < start + rangeLen; i++) {
+                        if (row[i] && row[i].toString().trim() !== "") return false;
+                        // For M&P, we consider it "missing" if NO data exists in critical columns
+                    }
+                    return true;
+                };
+
+                // We assume a PO exists if Name (Index 5) is present
+                let poName = row[5];
+                if (poName && poName.trim() !== "") {
+                    // Check Bill 1 (Start 24, check 5 cols)
+                    let b1Empty = isBlockEmpty(24, 5);
+                    // Check Bill 2 (Start 36, check 5 cols)
+                    let b2Empty = isBlockEmpty(36, 5);
+                    // Check Bill 3 (Start 48, check 5 cols)
+                    let b3Empty = isBlockEmpty(48, 5);
+
+                    let issues = [];
+                    if (b1Empty) { missingBillingData['1'].push(poName); issues.push("B1"); }
+                    if (b2Empty) { missingBillingData['2'].push(poName); issues.push("B2"); }
+                    if (b3Empty) { missingBillingData['3'].push(poName); issues.push("B3"); }
+
+                    if (issues.length > 0) issueCount++;
+                    else missingBillingData['complete'].push(poName);
+                }
+            });
+
+            // Update UI
+            document.getElementById('statPlanted').innerText = totalPlanted.toLocaleString();
+
+            let avgSurvRate = 0;
+            if (totalPlanted > 0) avgSurvRate = (totalSurvived / totalPlanted) * 100;
+            document.getElementById('statSurvived').innerText = `${totalSurvived.toLocaleString()} (${avgSurvRate.toFixed(1)}%)`;
+
+            document.getElementById('statDays').innerText = totalDays.toLocaleString();
+
+            document.getElementById('statMissing').innerText = `${issueCount} POs with Missing Inputs`;
+            document.getElementById('statMissing').style.color = issueCount > 0 ? '#c62828' : '#2e7d32';
+        }
+
+        function openBillingAnalytics() {
+            document.getElementById('billingModal').classList.add('show');
+            renderBillingChart();
+            renderBillingList('all');
+        }
+
+        function closeBillingModal() {
+            document.getElementById('billingModal').classList.remove('show');
+        }
+
+        function renderBillingList(filter) {
+            const list = document.getElementById('billingDrilldownList');
+            let html = "";
+            let items = [];
+
+            if (filter === 'all' || filter === '1') {
+                missingBillingData['1'].forEach(n => items.push({ name: n, tag: 'Missing Billing 1', color: '#ef5350' }));
+            }
+            if (filter === 'all' || filter === '2') {
+                missingBillingData['2'].forEach(n => items.push({ name: n, tag: 'Missing Billing 2', color: '#ab47bc' }));
+            }
+            if (filter === 'all' || filter === '3') {
+                missingBillingData['3'].forEach(n => items.push({ name: n, tag: 'Missing Billing 3', color: '#ffa726' }));
+            }
+
+            if (items.length === 0) {
+                html = `<div style="padding:10px; color:#888; font-style:italic;">No issues found. Great job!</div>`;
+            } else {
+                items.forEach(item => {
+                    html += `<div style="padding:8px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:600; font-size:0.8rem;">${item.name}</span>
+                        <span style="font-size:0.7rem; background:${item.color}; color:white; padding:2px 6px; border-radius:4px;">${item.tag}</span>
+                    </div>`;
+                });
+            }
+            list.innerHTML = html;
+        }
+
+        function renderBillingChart() {
+            const ctx = document.getElementById('billingChart').getContext('2d');
+
+            if (billingChartInstance) billingChartInstance.destroy();
+
+            const count1 = missingBillingData['1'].length;
+            const count2 = missingBillingData['2'].length;
+            const count3 = missingBillingData['3'].length;
+            const complete = missingBillingData['complete'].length;
+
+            billingChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Missing Bill 1', 'Missing Bill 2', 'Missing Bill 3', 'Complete'],
+                    datasets: [{
+                        data: [count1, count2, count3, complete],
+                        backgroundColor: ['#ef5350', '#ab47bc', '#ffa726', '#66bb6a']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                    },
+                    onClick: (evt, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const map = ['1', '2', '3', 'complete'];
+                            // Filter list based on click
+                            if (index < 3) renderBillingList(map[index]);
+                            else document.getElementById('billingDrilldownList').innerHTML = `<div style="padding:10px; color:#2e7d32;">${complete} POs have input for all billings.</div>`;
+                        } else {
+                            renderBillingList('all');
+                        }
+                    }
+                }
+            });
+        }
+
+        function insertRow(headerIdx) {
+            pushHistory();
+            let flatCount = getFlatHeaderCount();
+            const blankRow = Array(flatCount).fill("");
+            SHEET_DATABASE[activeSheet].splice(headerIdx + 1, 0, blankRow);
+            saveToStorage(); renderTable();
+        }
+
+        async function resetAllData() {
+            if (confirm("RESET to Default Layout? Custom Data will be erased.")) {
+                pushHistory();
+                let newDB = {};
+                ACTIVE_SHEETS = [...DEFAULT_SHEETS];
+                SHEET_HEADERS = [...DEFAULT_HEADERS];
+                SHEET_CUSTOM_HEADERS = {};
+                ACTIVE_SHEETS.forEach(sheet => newDB[sheet] = generateDefaultSheetData());
+                SHEET_DATABASE = newDB;
+                await saveToStorage();
+                renderTabs();
+                alert("Reset Complete.");
+            }
+        }
+
+        // --- DYNAMIC STRUCTURE (COLUMNS & TABS) ---
+        function openAddColumnModal() { document.getElementById('newColName').value = ""; document.getElementById('addColumnModal').classList.add('show'); document.getElementById('newColName').focus(); }
+        function closeAddColumnModal() { document.getElementById('addColumnModal').classList.remove('show'); }
+        function executeAddColumn() {
+            const name = document.getElementById('newColName').value.trim();
+            if (!name) return;
+            SHEET_HEADERS.push({ name: name, sub: [] });
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => {
+                    if (row && !isHeaderRow(row, sheetKey)) row.push("");
+                });
+            }
+            saveToStorage(); closeAddColumnModal(); renderTable();
+        }
+
+        function openDeleteColModal(index, name) { colToDelete = index; document.getElementById('delColName').innerText = name; document.getElementById('deleteColModal').classList.add('show'); }
+        function closeDeleteColModal() { document.getElementById('deleteColModal').classList.remove('show'); colToDelete = null; }
+        function executeDeleteColumn() {
+            if (colToDelete === null) return;
+
+            // Need to find which flat indices to remove
+            let h = SHEET_HEADERS[colToDelete];
+            let flatIdx = 0;
+            for (let i = 0; i < colToDelete; i++) {
+                let prevH = SHEET_HEADERS[i];
+                flatIdx += (prevH.sub && prevH.sub.length > 0) ? prevH.sub.length : 1;
+            }
+            let subLen = (h.sub && h.sub.length > 0) ? h.sub.length : 1;
+
+            SHEET_HEADERS.splice(colToDelete, 1);
+            for (let sheetKey in SHEET_DATABASE) {
+                SHEET_DATABASE[sheetKey].forEach(row => {
+                    if (row && !isHeaderRow(row, sheetKey) && row.length > flatIdx) {
+                        row.splice(flatIdx, subLen);
+                    }
+                });
+            }
+            saveToStorage(); closeDeleteColModal(); renderTable();
+        }
+
+        function openAddTabModal() { document.getElementById('newTabName').value = ""; document.getElementById('addTabModal').classList.add('show'); document.getElementById('newTabName').focus(); }
+        function closeAddTabModal() { document.getElementById('addTabModal').classList.remove('show'); }
+        function executeAddTab() {
+            const name = document.getElementById('newTabName').value.trim();
+            if (!name) return;
+            if (ACTIVE_SHEETS.includes(name)) { alert("Sheet already exists!"); return; }
+            ACTIVE_SHEETS.push(name);
+            SHEET_DATABASE[name] = generateDefaultSheetData();
+            saveToStorage(); closeAddTabModal(); activeSheet = name; renderTabs();
+        }
+
+        function openDeleteTabModal(name) { tabToDelete = name; document.getElementById('delTabName').innerText = name; document.getElementById('deleteTabModal').classList.add('show'); }
+        function closeDeleteTabModal() { document.getElementById('deleteTabModal').classList.remove('show'); tabToDelete = null; }
+        function executeDeleteTab() {
+            if (!tabToDelete) return;
+            ACTIVE_SHEETS = ACTIVE_SHEETS.filter(s => s !== tabToDelete);
+            delete SHEET_DATABASE[tabToDelete];
+            if (activeSheet === tabToDelete) { activeSheet = ACTIVE_SHEETS.length > 0 ? ACTIVE_SHEETS[0] : null; }
+            saveToStorage(); closeDeleteTabModal(); renderTabs();
+        }
+
+        // TOOLTIP
+        const tooltip = document.getElementById('rowTooltip');
+        function showRowTooltip(e, rowIndex) {
+            const data = SHEET_DATABASE[activeSheet];
+            if (!data || !data[rowIndex]) return;
+            let c = ''; let count = 0;
+            for (let k = 0; k < data[rowIndex].length; k++) {
+                if (data[rowIndex][k] && count < 3) { c += `<div>${data[rowIndex][k]}</div>`; count++; }
+            }
+            tooltip.style.display = 'block'; tooltip.innerHTML = c || 'No Data'; moveTooltip(e);
+        }
+        function moveTooltip(e) {
+            let x = e.clientX + 15; let y = e.clientY + 15;
+            if (x + 300 > window.innerWidth) x = e.clientX - 310;
+            if (y + 120 > window.innerHeight) y = e.clientY - 120;
+            tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px';
+        }
+        function hideTooltip() { tooltip.style.display = 'none'; }
+
+        // TARGET MODAL STUBS
+        function openTargetsModal() {
+            const c = document.getElementById('targetInputs'); c.innerHTML = '';
+            const k = activeSheet;
+            document.getElementById('targetSheetLabel').innerText = k;
+            c.innerHTML += `
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <label class="modern-label">Monthly Target</label>
+                <input id="target-${k.replace(/\s/g, '-')}" value="${SHEET_TARGETS[k] || 5}" type="number" class="modern-form-control">
+                <small style="color:#999; font-size:0.8rem;">(Reference only)</small>
+            </div>`;
+            document.getElementById('targetsModal').classList.add('show');
+        }
+        function closeTargetsModal() { document.getElementById('targetsModal').classList.remove('show'); }
+        async function saveTargets() {
+            const k = activeSheet;
+            const val = parseInt(document.getElementById(`target-${k.replace(/\s/g, '-')}`).value) || 5;
+            SHEET_TARGETS[k] = val; await saveToStorage(); closeTargetsModal(); renderTable();
+        }
+    </script>
+</body>
+
+</html>

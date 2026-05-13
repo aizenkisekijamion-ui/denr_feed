@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Report | NGP Palawan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar styles moved to main.css */
+
+        .main-pane {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+
+        /* Specific Financial Styles */
+        .money-card {
+            background: linear-gradient(135deg, var(--primary-dark), #1b5e20);
+            color: white;
+        }
+
+        .money-val {
+            font-family: 'Roboto', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar-bg {
+            background: #eee;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-bar-fill {
+            background: var(--accent-color);
+            height: 100%;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-form {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            width: 500px;
+            max-width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin:0;">NGP Palawan</h3>
+            </div>
+            <ul style="list-style: none; padding: 1.5rem;">
+                <li style="margin-bottom: 0.5rem;"><a href="dashboard.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-th-large"></i> Dashboard</a></li>
+                <!-- Accomplishment tab removed -->
+                <li style="margin-bottom: 0.5rem;"><a href="#"
+                        style="color: white; text-decoration: none; display: flex; gap: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;"><i
+                            class="fas fa-coins"></i> Financial</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="site-visit.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-clipboard-check"></i> Site Visit 2025</a></li>
+
+                <li style="margin-bottom: 0.5rem;"><a href="forest-nursery.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-warehouse"></i> Forest Nursery 2025</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="gis-map.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-map-marked-alt"></i> GIS Map</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="photos.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-images"></i> Geo-Photos</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="drive-files.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fab fa-google-drive"></i> Drive Files</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-pane">
+            <header style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h2>Financial Status</h2>
+                    <p style="color: var(--text-medium);">Fund Utilization and SAA Monitoring</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline" style="margin-right: 0.5rem;"><i class="fas fa-file-excel"></i>
+                        Import Excel</button>
+                    <button class="btn btn-primary" onclick="openModal()"><i class="fas fa-plus"></i> Add
+                        Transaction</button>
+                </div>
+            </header>
+
+            <!-- Money Cards -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="card money-card">
+                    <div style="opacity: 0.8; font-size: 0.8rem;">Total Allotment</div>
+                    <div class="money-val" style="font-size: 1.5rem; font-weight: 700;">₱ 15,000,000</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px;">FY 2025</div>
+                </div>
+                <div class="card">
+                    <div style="color: var(--text-medium); font-size: 0.8rem;">Obligated</div>
+                    <div class="money-val" style="font-size: 1.5rem; font-weight: 700; color: #1976D2;">₱ 8,450,000
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 56%; background: #1976D2;"></div>
+                    </div>
+                    <div style="font-size: 0.75rem; text-align: right; color: #1976D2;">56.3%</div>
+                </div>
+                <div class="card">
+                    <div style="color: var(--text-medium); font-size: 0.8rem;">Disbursed</div>
+                    <div class="money-val" style="font-size: 1.5rem; font-weight: 700; color: #388E3C;">₱ 6,200,000
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width: 41%; background: #388E3C;"></div>
+                    </div>
+                    <div style="font-size: 0.75rem; text-align: right; color: #388E3C;">73% of Obligation</div>
+                </div>
+                <div class="card">
+                    <div style="color: var(--text-medium); font-size: 0.8rem;">Remaining Balance</div>
+                    <div class="money-val" style="font-size: 1.5rem; font-weight: 700; color: #F57C00;">₱ 6,550,000
+                    </div>
+                    <div style="font-size: 0.8rem; margin-top: 5px; color: #F57C00;">Available</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <!-- Main Ledger -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">SAA Ledger</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead style="background: #f5f5f5; border-bottom: 2px solid #ddd;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left;">SAA Number</th>
+                                    <th style="padding: 10px; text-align: left;">Particulars</th>
+                                    <th style="padding: 10px; text-align: right;">Amount</th>
+                                    <th style="padding: 10px; text-align: right;">Obligated</th>
+                                    <th style="padding: 10px; text-align: center;">%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody">
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">SAA-2025-01-001</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">Site Maintenance - Q1</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">5,000,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">3,200,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;"><span
+                                            style="background: #e3f2fd; color: #1976D2; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">64%</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">SAA-2025-01-005</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">Seedling Procurement</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">2,500,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">2,500,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;"><span
+                                            style="background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">100%</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">SAA-2025-02-012</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee;">Traveling Expenses</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">1,000,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;"
+                                        class="money-val">450,000</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;"><span
+                                            style="background: #fff3e0; color: #ef6c00; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">45%</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Utilization Chart -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Utilization by MOOE</h3>
+                    <canvas id="finChart" height="250"></canvas>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-form">
+            <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">Record New Obligation</h3>
+            <form onsubmit="handleFormSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">SAA / Reference No.</label>
+                    <input type="text" class="form-input" placeholder="e.g. SAA-2025-03-015" required name="saa">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Particulars</label>
+                    <input type="text" class="form-input" placeholder="Description of expense" required name="desc">
+                </div>
+                <div class="form-group">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div>
+                            <label class="form-label">Total Amount</label>
+                            <input type="number" class="form-input" placeholder="0.00" required name="amount">
+                        </div>
+                        <div>
+                            <label class="form-label">Obligated Amount</label>
+                            <input type="number" class="form-input" placeholder="0.00" required name="obligated">
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Chart
+        const ctx = document.getElementById('finChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Plantation Est.', 'Traveling', 'Supplies', 'Other Services'],
+                datasets: [{
+                    data: [45, 15, 20, 20],
+                    backgroundColor: ['#2E7D32', '#66BB6A', '#FFA726', '#42A5F5']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // Modal Logic
+        function openModal() {
+            document.getElementById('addModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        // Form Logic
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            // Create new row
+            const saa = formData.get('saa');
+            const desc = formData.get('desc');
+            const amount = parseFloat(formData.get('amount')).toLocaleString();
+            const obligated = parseFloat(formData.get('obligated')).toLocaleString();
+
+            // Calculate %
+            const pct = Math.round((formData.get('obligated') / formData.get('amount')) * 100);
+            let color = '#ef6c00'; // orange
+            let bg = '#fff3e0';
+            if (pct >= 80) { color = '#2e7d32'; bg = '#e8f5e9'; } // green
+
+            const row = `
+            <tr style="animation: highlight 2s;">
+                <td style="padding: 12px; border-bottom: 1px solid #eee; font-weight:bold; color:var(--primary-dark);">${saa}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee;">${desc}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;" class="money-val">${amount}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;" class="money-val">${obligated}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">
+                    <span style="background: ${bg}; color: ${color}; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">${pct}%</span>
+                </td>
+            </tr>
+        `;
+
+            document.getElementById('ledgerBody').insertAdjacentHTML('afterbegin', row);
+
+            // Update Chart (Simulated)
+            chart.data.datasets[0].data[0] += 10;
+            chart.update();
+
+            closeModal();
+            e.target.reset();
+
+            // Show success
+            const btn = document.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            setTimeout(() => btn.innerHTML = originalText, 2000);
+        }
+    </script>
+
+    <style>
+        @keyframes highlight {
+            0% {
+                background-color: #e8f5e9;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+    </style>
+
+</body>
+
+</html>

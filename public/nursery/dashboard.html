@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | NGP DENR Palawan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            background-color: #f8f9fa;
+        }
+
+        .top-bar {
+            background-color: var(--bg-white);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .content-padding {
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--text-medium);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header"><i class="fas fa-tree fa-lg"></i>
+                <div>
+                    <h3 style="color: white; font-size: 1.1rem; margin:0;">NGP Palawan</h3><span
+                        style="font-size: 0.75rem; opacity: 0.7;">Admin Console</span>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link active"><i class="fas fa-th-large"></i>
+                        Dashboard</a></li>
+                <li class="nav-item"><a href="financial.html" class="nav-link"><i class="fas fa-coins"></i>
+                        Financial</a></li>
+                <li class="nav-item"><a href="site-visit.html" class="nav-link"><i class="fas fa-clipboard-check"></i>
+                        Site Visit 2025</a></li>
+
+                <li class="nav-item"><a href="maintenance-protection.html" class="nav-link"><i
+                            class="fas fa-shield-alt"></i>
+                        Maintenance & Protection</a></li>
+                <li class="nav-item"><a href="forest-nursery.html" class="nav-link"><i class="fas fa-warehouse"></i>
+                        Forest Nursery 2025</a></li>
+                <li class="nav-item"><a href="gis-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> GIS
+                        Map</a></li>
+                <li class="nav-item"><a href="photos.html" class="nav-link"><i class="fas fa-images"></i> Geo-Photos</a>
+                </li>
+                <li class="nav-item"><a href="drive-files.html" class="nav-link"><i class="fab fa-google-drive"></i>
+                        Drive Files</a></li>
+            </ul>
+            <div style="padding: 1.5rem; margin-top: auto;"><a href="index.html" class="nav-link"
+                    style="color: #ff8a80;"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 style="font-size: 1.25rem;">Overview</h2>
+                <div class="user-profile">
+                    <div style="text-align: right; line-height: 1.2;">
+                        <div style="font-weight: 600; font-size: 0.9rem;">Juan Dela Cruz</div><span
+                            style="font-size: 0.8rem; color: var(--text-medium);">Project Officer</span>
+                    </div>
+                    <div class="avatar">JD</div>
+                </div>
+            </header>
+
+            <div class="content-padding">
+                <!-- SITE VISIT OVERVIEW -->
+                <div
+                    style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; background: #fafafa; margin-bottom: 1.5rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div
+                        style="margin-bottom: 1rem; color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-clipboard-check" style="color:#2E7D32;"></i> Site Visit Overview
+                    </div>
+                    <div class="stats-grid">
+                        <!-- Site Visit Core Metrics -->
+                        <div class="card stat-card" onclick="showStatDetails('total')"
+                            style="cursor: pointer; border-left-color: #2E7D32;">
+                            <div class="stat-label">Total Visits YTD (SITE VISIT)</div>
+                            <div class="stat-value" id="statTotalVisits">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Activity Breakdown <i
+                                    class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="showStatDetails('non_compliant')"
+                            style="cursor: pointer; border-left-color: var(--accent-color);">
+                            <div class="stat-label">Non-Compliant (SITE VISIT)</div>
+                            <div class="stat-value" id="statNonCompliant">0</div>
+                            <div style="font-size: 0.8rem; color: #d32f2f;">View Details <i class="fas fa-chevron-right"
+                                    style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('compliance')"
+                            style="cursor: pointer; border-left-color: #2196F3;">
+                            <div class="stat-label">Compliance Rate (SITE VISIT)</div>
+                            <div class="stat-value" id="statComplianceRate">0%</div>
+                            <div style="font-size: 0.8rem; color: var(--success);">View Global Breakdown <i
+                                    class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+
+                        <!-- Site Visit Aggregate Metrics -->
+                        <div class="card stat-card" onclick="openDashboardAnalytics('seedlings')"
+                            style="cursor: pointer; border-left-color: #4CAF50;">
+                            <div class="stat-label">Total Seedlings (SITE VISIT) <i class="fas fa-info-circle"
+                                    style="font-size:0.7rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showDashboardFormula('seedlings')"></i></div>
+                            <div class="stat-value" id="statTotalSeedlings">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Breakdown by Commodity <i
+                                    class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('survival')"
+                            style="cursor: pointer; border-left-color: #FFC107;">
+                            <div class="stat-label">Global Survival Rate (SITE VISIT) <i class="fas fa-info-circle"
+                                    style="font-size:0.7rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showDashboardFormula('survival')"></i></div>
+                            <div class="stat-value" id="statAvgSurvival">0%</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Average per District <i
+                                    class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('contract')"
+                            style="cursor: pointer; border-left-color: #E91E63;">
+                            <div class="stat-label">Total Contract Cost (SITE VISIT) <i class="fas fa-info-circle"
+                                    style="font-size:0.7rem; cursor:pointer;"
+                                    onclick="event.stopPropagation(); showDashboardFormula('contract')"></i></div>
+                            <div class="stat-value" id="statTotalContract">₱0.00</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Sum per District <i
+                                    class="fas fa-chevron-right" style="font-size: 0.7rem; margin-left: 4px;"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOREST NURSERY OVERVIEW -->
+                <div
+                    style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; background: #fafafa; margin-bottom: 2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div
+                        style="margin-bottom: 1rem; color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-warehouse" style="color:#ef6c00;"></i> Forest Nursery Overview (2025)
+                    </div>
+                    <div class="stats-grid">
+                        <div class="card stat-card" onclick="openNurseryAnalytics('produced')"
+                            style="cursor: pointer; border-left-color: #4caf50;">
+                            <div class="stat-label">Total Seedlings Produced</div>
+                            <div class="stat-value" id="statNurseryProduced">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">All Nursery Tabs Combined <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openNurseryAnalytics('available')"
+                            style="cursor: pointer; border-left-color: #0288d1;">
+                            <div class="stat-label">Available Stock</div>
+                            <div class="stat-value" id="statNurseryAvailable">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Current Global Inventory <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openNurseryAnalytics('distributed')"
+                            style="cursor: pointer; border-left-color: #c62828;">
+                            <div class="stat-label">Total Distributed/Planted</div>
+                            <div class="stat-value" id="statNurseryDistributed">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Total Successive Disposition <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ANNEX E: MAINTENANCE & PROTECTION OVERVIEW -->
+                <div
+                    style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; background: #fafafa; margin-bottom: 2rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div
+                        style="margin-bottom: 1rem; color: #666; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-shield-alt" style="color:#2e7d32;"></i> Maintenance & Protection
+                        Overview
+                    </div>
+                    <div class="stats-grid">
+                        <div class="card stat-card" onclick="openDashboardAnalytics('mp_planted')"
+                            style="cursor: pointer; border-left-color: #4caf50;">
+                            <div class="stat-label">Expected Planted</div>
+                            <div class="stat-value" id="mpStatPlanted">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Click to view detailed stats <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('mp_survived')"
+                            style="cursor: pointer; border-left-color: #0288d1;">
+                            <div class="stat-label">Survived / % Rate</div>
+                            <div class="stat-value" id="mpStatSurvived">0 (0%)</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Global Survival Metrics <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('mp_days')"
+                            style="cursor: pointer; border-left-color: #ef6c00;">
+                            <div class="stat-label">Working Days</div>
+                            <div class="stat-value" id="mpStatDays">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Total Days Elapsed <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                        <div class="card stat-card" onclick="openDashboardAnalytics('mp_missing')"
+                            style="cursor: pointer; border-left-color: #c62828;">
+                            <div class="stat-label">Missing Inputs</div>
+                            <div class="stat-value" id="mpStatMissing">0 Issues</div>
+                            <div style="font-size: 0.8rem; color: var(--text-medium);">Data Quality Alert <i
+                                    class="fas fa-chevron-right" style="font-size:0.7rem; margin-left:4px;"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- M&P DETAIL MODAL -->
+                <div id="mpModal" class="modal-overlay" style="z-index: 10003;">
+                    <div class="modal-box" style="width: 90vw; max-width: 1200px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                            <h3><i class="fas fa-shield-alt"></i> Maintenance & Protection Overview</h3>
+                            <button onclick="closeMPModal()"
+                                style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                        </div>
+
+                        <div class="stats-grid" style="margin-bottom: 2rem;">
+                            <div class="card" style="border-left: 4px solid #4caf50;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="background:#e8f5e9; color:#2e7d32; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                                        <i class="fas fa-tree"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.7rem; color:var(--text-medium);">Expected Planted</div>
+                                        <div class="stat-val" style="font-weight:700; font-size: 1.5rem;"
+                                            id="mpDetailPlanted">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card" style="border-left: 4px solid #0288d1;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="background:#e1f5fe; color:#0288d1; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                                        <i class="fas fa-seedling"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.7rem; color:var(--text-medium);">Survived / % Rate</div>
+                                        <div class="stat-val" style="font-weight:700; font-size: 1.2rem;"
+                                            id="mpDetailSurvived">0 (0%)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card" style="border-left: 4px solid #ef6c00;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="background:#fff3e0; color:#ef6c00; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.7rem; color:var(--text-medium);">Working Days</div>
+                                        <div class="stat-val" style="font-weight:700; font-size: 1.5rem;"
+                                            id="mpDetailDays">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card" style="border-left: 4px solid #c62828;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div
+                                        style="background:#ffebee; color:#c62828; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.7rem; color:var(--text-medium);">Missing Inputs</div>
+                                        <div class="stat-val" style="font-weight:700; font-size: 1.2rem;"
+                                            id="mpDetailMissing">0 Issues</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions"
+                            style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                            <button class="btn btn-primary" onclick="closeMPModal()"
+                                style="padding: 10px 20px;">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ADDED CHART MODAL FOR DASHBOARD -->
+                <div id="chartModal" class="modal-overlay" style="z-index: 10001;">
+                    <div class="modal-box" style="width: 95%; max-width: 900px;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h3 id="chartTitle" style="margin:0; text-align:left; color:#333;">Analytics Breakdown</h3>
+                            <button onclick="closeChartModal()"
+                                style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                        </div>
+                        <div style="position: relative; height: 480px; width: 100%;">
+                            <canvas id="analyticsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="formulaModal" class="modal-overlay" style="z-index: 10000;">
+                    <div class="modal-box" style="width: 400px; text-align: left;">
+                        <h3 id="formulaTitle">Formula Info</h3>
+                        <p id="formulaText" style="line-height:1.5; color:#555;"></p>
+                        <button onclick="closeFormula()" class="btn btn-primary"
+                            style="margin-top:1rem; width:100%;">Close</button>
+                    </div>
+                </div>
+
+                <div id="statsModal" class="modal-overlay" style="z-index: 10002;">
+                    <div class="modal-box" style="width: 800px; max-width: 90%;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h3 id="modalTitle" style="margin:0;">Details</h3>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <button id="modalViewToggle" class="btn btn-outline"
+                                    style="font-size: 0.75rem; padding: 5px 10px; display: none;"
+                                    onclick="toggleModalView()">View as Pie</button>
+                                <button onclick="closeStatsModal()"
+                                    style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                            </div>
+                        </div>
+                        <div id="modalContent" style="max-height: 500px; overflow-y: auto;"></div>
+                        <div id="modalChartContainer"
+                            style="display: none; height: 350px; width: 100%; position: relative;">
+                            <canvas id="modalPieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="scripts/db-service.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            let SHEET_DATABASE = {};
+            let FOREST_NURSERY_DATABASE = {};
+            let SHEET_TARGETS = {};
+            let SHEET_CUSTOM_HEADERS = {};
+
+            try {
+                await DBService.init();
+                SHEET_DATABASE = await DBService.get('SHEET_DATABASE') || {};
+                FOREST_NURSERY_DATABASE = await DBService.get('FOREST_NURSERY_DATABASE') || {};
+                SHEET_TARGETS = await DBService.get('SHEET_TARGETS') || {};
+                SHEET_CUSTOM_HEADERS = await DBService.get('SHEET_CUSTOM_HEADERS') || {};
+            } catch (e) { console.error("Failed to load dashboard data", e); }
+
+            window.SHEET_DATABASE = SHEET_DATABASE;
+            window.FOREST_NURSERY_DATABASE = FOREST_NURSERY_DATABASE;
+            window.SHEET_TARGETS = SHEET_TARGETS;
+            window.SHEET_CUSTOM_HEADERS = SHEET_CUSTOM_HEADERS;
+
+            let totalVisits = 0;
+            let totalMonths = 0;
+            let nonCompliantCount = 0;
+            let compliantCount = 0;
+            let globalSeedlings = 0;
+            let globalSurvivalSum = 0;
+            let globalSurvivalCount = 0;
+            let globalContract = 0;
+
+            const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+            if (Object.keys(SHEET_DATABASE).length > 0) {
+                Object.keys(SHEET_DATABASE).forEach(tabName => {
+                    const target = SHEET_TARGETS[tabName] || 5;
+                    const rows = SHEET_DATABASE[tabName] || [];
+                    let customHeaders = SHEET_CUSTOM_HEADERS[tabName] || [];
+
+                    let currentMonthCount = 0;
+                    let hasMonth = false;
+                    let currentMonthName = "";
+
+                    const isHeaderRow = (r) => {
+                        if (!r || !Array.isArray(r) || r.length === 0) return false;
+                        let v = String(r[0] || "").trim().toUpperCase();
+                        if (!v) return false;
+                        let isKnown = MONTHS.includes(v) || customHeaders.some(h => String(h).trim().toUpperCase() === v);
+                        return isKnown && (!r[1] || String(r[1]).trim() === "");
+                    };
+
+                    const processBlock = (mName, count) => {
+                        if (!mName) return;
+                        totalMonths++;
+                        totalVisits += count;
+                        if (count < target) nonCompliantCount++; else compliantCount++;
+                    };
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        if (isHeaderRow(row)) {
+                            if (hasMonth) processBlock(currentMonthName, currentMonthCount);
+                            currentMonthName = row[0];
+                            currentMonthCount = 0;
+                            hasMonth = true;
+                        } else {
+                            // SITE VISIT DATA ROW
+                            let dateVal = String(row[4] || "").trim();
+                            if (dateVal !== "" && hasMonth) currentMonthCount++;
+
+                            // Seedlings (Index 13)
+                            let sQty = parseCurrency(row[13]);
+                            globalSeedlings += sQty;
+
+                            // Survival (Index 14)
+                            let survVal = parsePercentage(row[14]);
+                            if (survVal > 0) { globalSurvivalSum += survVal; globalSurvivalCount++; }
+
+                            // Contract (Index 15)
+                            let costVal = parseCurrency(row[15]);
+                            globalContract += costVal;
+                        }
+                    }
+                    if (hasMonth) processBlock(currentMonthName, currentMonthCount);
+                });
+
+                // Update UI elements
+                if (document.getElementById('statTotalVisits')) document.getElementById('statTotalVisits').innerText = totalVisits;
+                if (document.getElementById('statNonCompliant')) document.getElementById('statNonCompliant').innerText = nonCompliantCount;
+                let rate = totalMonths > 0 ? Math.round((compliantCount / totalMonths) * 100) : 0;
+                if (document.getElementById('statComplianceRate')) document.getElementById('statComplianceRate').innerText = rate + "%";
+
+                if (document.getElementById('statTotalSeedlings')) document.getElementById('statTotalSeedlings').innerText = globalSeedlings.toLocaleString();
+                if (document.getElementById('statAvgSurvival')) document.getElementById('statAvgSurvival').innerText = (globalSurvivalCount > 0 ? Math.round(globalSurvivalSum / globalSurvivalCount) : 0) + '%';
+                if (document.getElementById('statTotalContract')) document.getElementById('statTotalContract').innerText = '₱' + globalContract.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            } else {
+                document.getElementById('statTotalVisits').innerText = "0";
+                document.getElementById('statNonCompliant').innerText = "0";
+                document.getElementById('statComplianceRate').innerText = "0%";
+                document.getElementById('statTotalSeedlings').innerText = "0";
+                document.getElementById('statAvgSurvival').innerText = "0%";
+                document.getElementById('statTotalContract').innerText = "₱0.00";
+            }
+
+            // --- FOREST NURSERY AGGREGATION ---
+            let nurseryProduced = 0;
+            let nurseryAvailable = 0;
+            let nurseryDistributed = 0;
+
+            const NURSERY_CATEGORIES = ["INDIGENOUS", "FRUIT TREES", "BAMBOO", "OTHERS"];
+            const isNurseryHeader = (r) => {
+                if (!r || !Array.isArray(r) || r.length === 0) return false;
+                let v = String(r[0] || "").trim().toUpperCase();
+                return NURSERY_CATEGORIES.includes(v) && (!r[1] || String(r[1]).trim() === "");
+            };
+
+            const parseNum = (str) => {
+                if (!str) return 0;
+                let cleaned = String(str).replace(/[^0-9.]/g, '');
+                return parseFloat(cleaned) || 0;
+            };
+
+            Object.keys(FOREST_NURSERY_DATABASE).forEach(tab => {
+                const rows = FOREST_NURSERY_DATABASE[tab] || [];
+                rows.forEach(row => {
+                    if (row && !isNurseryHeader(row)) {
+                        // Col indices: 3:Beg, 4:Prod, 8:Disp
+                        nurseryProduced += (parseNum(row[3]) + parseNum(row[4]));
+                        nurseryAvailable += (parseNum(row[3]) + parseNum(row[4]) - parseNum(row[8]));
+                        nurseryDistributed += parseNum(row[8]);
+                    }
+                });
+            });
+
+            document.getElementById('statNurseryProduced').innerText = nurseryProduced.toLocaleString();
+            document.getElementById('statNurseryAvailable').innerText = nurseryAvailable.toLocaleString();
+            document.getElementById('statNurseryDistributed').innerText = nurseryDistributed.toLocaleString();
+
+        });
+
+        // --- NEW NURSERY INTERACTIVE ANALYTICS ---
+        function openNurseryAnalytics(metric) {
+            const modal = document.getElementById('chartModal');
+            const title = document.getElementById('chartTitle');
+            const canvas = document.getElementById('analyticsChart');
+            const db = window.FOREST_NURSERY_DATABASE || {};
+
+            if (activeDashboardChart) activeDashboardChart.destroy();
+
+            let labels = [];
+            let dataValues = [];
+
+            const NURSERY_CATEGORIES = ["INDIGENOUS", "FRUIT TREES", "BAMBOO", "OTHERS"];
+            const isH = (r) => r && Array.isArray(r) && r.length > 0 && NURSERY_CATEGORIES.includes(String(r[0]).toUpperCase());
+            const parseNum = (str) => {
+                if (!str) return 0;
+                let cleaned = String(str).replace(/[^0-9.]/g, '');
+                return parseFloat(cleaned) || 0;
+            };
+
+            Object.keys(db).forEach(tab => {
+                let tabTotal = 0;
+                (db[tab] || []).forEach(row => {
+                    if (row && !isH(row)) {
+                        if (metric === 'produced') tabTotal += (parseNum(row[3]) + parseNum(row[4]));
+                        else if (metric === 'available') tabTotal += (parseNum(row[3]) + parseNum(row[4]) - parseNum(row[8]));
+                        else if (metric === 'distributed') tabTotal += parseNum(row[8]);
+                    }
+                });
+                if (tabTotal > 0) {
+                    labels.push(tab);
+                    dataValues.push(tabTotal);
+                }
+            });
+
+            title.innerText = `Nursery Breakdown by Location: ${metric.charAt(0).toUpperCase() + metric.slice(1)}`;
+            modal.classList.add('show');
+
+            const ctx = canvas.getContext('2d');
+            activeDashboardChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0', '#FF5722']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (evt, item) => {
+                        if (item.length > 0) {
+                            const idx = item[0].index;
+                            openNurseryDrilldown(labels[idx], metric);
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        function openNurseryDrilldown(tabName, metric) {
+            const modal = document.getElementById('statsModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            const chartToggle = document.getElementById('modalViewToggle');
+            const chartContainer = document.getElementById('modalChartContainer');
+
+            title.innerText = `${tabName} - ${metric.toUpperCase()} Detail`;
+            content.innerHTML = '';
+            chartContainer.style.display = 'none';
+            content.style.display = 'block';
+            chartToggle.style.display = 'none';
+
+            const db = window.FOREST_NURSERY_DATABASE[tabName] || [];
+            const parseNum = (str) => {
+                if (!str) return 0;
+                let cleaned = String(str).replace(/[^0-9.]/g, '');
+                return parseFloat(cleaned) || 0;
+            };
+
+            let html = `<table style="width:100%; border-collapse:collapse; font-size: 0.9rem;">
+                <thead style="background:#f5f5f5;">
+                    <tr>
+                        <th style="padding:10px; text-align:left;">Species</th>
+                        <th style="padding:10px; text-align:right;">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            let grandTotal = 0;
+            db.forEach(row => {
+                // Skip header rows by checking if Col 0 is a category name
+                const cats = ["INDIGENOUS", "FRUIT TREES", "BAMBOO", "OTHERS"];
+                if (row && Array.isArray(row) && row.length > 0 && !cats.includes(String(row[0]).toUpperCase())) {
+                    let val = 0;
+                    if (metric === 'produced') val = (parseNum(row[3]) + parseNum(row[4]));
+                    else if (metric === 'available') val = (parseNum(row[3]) + parseNum(row[4]) - parseNum(row[8]));
+                    else if (metric === 'distributed') val = parseNum(row[8]);
+
+                    if (val > 0) {
+                        grandTotal += val;
+                        html += `<tr style="border-bottom:1px solid #eee;">
+                            <td style="padding:10px;">${row[1] || 'Unnamed Species'}</td>
+                            <td style="padding:10px; text-align:right; font-weight:700;">${val.toLocaleString()}</td>
+                        </tr>`;
+                    }
+                }
+            });
+
+            html += `</tbody>
+                <tfoot>
+                    <tr style="background:#fafafa; font-weight:700;">
+                        <td style="padding:10px;">TOTAL</td>
+                        <td style="padding:10px; text-align:right;">${grandTotal.toLocaleString()}</td>
+                    </tr>
+                </tfoot>
+            </table>`;
+
+            content.innerHTML = html;
+            modal.classList.add('show');
+        }
+
+        // --- EXISTING GLOBAL HELPERS ---
+        const parseCurrency = (str) => {
+            if (!str) return 0;
+            let cleaned = String(str).replace(/\(.*\)/g, '');
+            cleaned = cleaned.replace(/[^0-9.]/g, '');
+            return parseFloat(cleaned) || 0;
+        };
+
+        const parsePercentage = (str) => {
+            if (!str) return 0;
+            const match = String(str).match(/(\d+\.?\d*)\s?%/);
+            if (match) return parseFloat(match[1]) || 0;
+            return 0;
+        };
+
+        let modalChart = null;
+        let modalData = { labels: [], values: [] };
+        let modalView = 'default'; // 'default' or 'pie'
+        let currentStatRows = []; // Holds data for the current modal session
+
+        function renderStatDetailsTable(rows) {
+            const content = document.getElementById('modalContent');
+            if (!rows || rows.length === 0) {
+                content.innerHTML = `<div style="padding:20px; text-align:center; color:#777;">No records found.</div>`;
+                return;
+            }
+
+            let html = `<table style="width:100%; border-collapse:collapse; font-size: 0.9rem;">
+                <thead style="background:#f5f5f5; color:#333; font-weight:700;">
+                    <tr>
+                        <th style="padding:10px; border-bottom:2px solid #ddd; text-align:left;">Office (Tab)</th>
+                        <th style="padding:10px; border-bottom:2px solid #ddd; text-align:left;">Month / Block</th>
+                        <th style="padding:10px; border-bottom:2px solid #ddd; text-align:center;">Status</th>
+                        <th style="padding:10px; border-bottom:2px solid #ddd; text-align:right;">Count</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            rows.forEach(row => {
+                html += `<tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:10px; font-weight:600;">${row.district}</td>
+                    <td style="padding:10px; color:#555;">${row.month}</td>
+                    <td style="padding:10px; text-align:center;">${row.badge}</td>
+                    <td style="padding:10px; text-align:right; font-weight:bold;">${row.countStr}</td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            content.innerHTML = html;
+        }
+
+        function showStatDetails(type) {
+            const modal = document.getElementById('statsModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            const chartToggle = document.getElementById('modalViewToggle');
+            const chartContainer = document.getElementById('modalChartContainer');
+
+            const db = window.SHEET_DATABASE;
+            const targets = window.SHEET_TARGETS;
+            const custom = window.SHEET_CUSTOM_HEADERS;
+            const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+            // Reset UI
+            content.innerHTML = '';
+            chartContainer.style.display = 'none';
+            content.style.display = 'block';
+            modalView = 'default';
+            chartToggle.innerText = 'View as Pie';
+            chartToggle.style.display = (type === 'total' || type === 'non_compliant') ? 'block' : 'none';
+
+            currentStatRows = [];
+            let districtStats = {}; // For pie chart: tabName -> count
+
+            Object.keys(db).forEach(tabName => {
+                const target = targets[tabName] || 5;
+                const rows = db[tabName] || [];
+                const tabCustom = custom[tabName] || [];
+
+                districtStats[tabName] = 0;
+
+                let currentMonth = '';
+                let currentCount = 0;
+                let hasMonth = false;
+
+                const check = () => {
+                    if (!hasMonth) return;
+
+                    let display = false;
+                    let badge = '';
+
+                    if (currentCount < target) {
+                        if (type === 'non_compliant') {
+                            display = true;
+                            districtStats[tabName]++;
+                        }
+                        badge = `<span style="background:#ffebee; color:#d32f2f; padding:4px 8px; border-radius:4px; font-weight:700; font-size:0.8rem;">UNDER</span>`;
+                    } else if (currentCount === target) {
+                        if (type === 'total') {
+                            display = true;
+                            districtStats[tabName]++;
+                        }
+                        badge = `<span style="background:#e8f5e9; color:#2e7d32; padding:4px 8px; border-radius:4px; font-weight:700; font-size:0.8rem;">MET</span>`;
+                    } else {
+                        if (type === 'total') {
+                            display = true; // Show Over in Total view
+                            districtStats[tabName]++;
+                        }
+                        badge = `<span style="background:#E3F2FD; color:#1565C0; padding:4px 8px; border-radius:4px; font-weight:700; font-size:0.8rem;">OVER</span>`;
+                    }
+
+                    if (display) {
+                        currentStatRows.push({
+                            district: tabName,
+                            month: currentMonth,
+                            badge: badge,
+                            countStr: `${currentCount} / ${target}`
+                        });
+                    }
+                };
+
+                const isHeaderRow = (r) => {
+                    if (!r || !Array.isArray(r) || r.length === 0) return false;
+                    let v = String(r[0] || "").trim().toUpperCase();
+                    if (!v) return false;
+                    let isKnown = MONTHS.includes(v) || tabCustom.some(c => String(c).trim().toUpperCase() === v);
+                    return isKnown && (!r[1] || String(r[1]).trim() === "");
+                };
+
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (isHeaderRow(row)) {
+                        check();
+                        currentMonth = row[0];
+                        currentCount = 0; hasMonth = true;
+                    } else if (hasMonth) {
+                        let dateVal = String(row[4] || "").trim();
+                        if (dateVal !== "") currentCount++;
+                    }
+                }
+                check();
+            });
+
+            if (type === 'non_compliant') title.innerText = 'Non-Compliant Months (Action Required)';
+            if (type === 'total') title.innerText = 'Compliant / Met Targets Breakdown';
+
+            // Prep data for Pie chart
+            modalData.labels = Object.keys(districtStats).filter(k => districtStats[k] > 0);
+            modalData.values = modalData.labels.map(k => districtStats[k]);
+
+            renderStatDetailsTable(currentStatRows);
+            modal.classList.add('show');
+        }
+
+        function toggleModalView() {
+            const content = document.getElementById('modalContent');
+            const chartContainer = document.getElementById('modalChartContainer');
+            const chartToggle = document.getElementById('modalViewToggle');
+            const canvas = document.getElementById('modalPieChart');
+
+            if (modalView === 'default') {
+                modalView = 'pie';
+                content.style.display = 'none';
+                chartContainer.style.display = 'block';
+                chartToggle.innerText = 'Default View';
+
+                if (modalChart) modalChart.destroy();
+
+                const palette = ['#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0', '#FF5722', '#607D8B', '#795548', '#009688', '#FF9800', '#03A9F4', '#8BC34A'];
+
+                modalChart = new Chart(canvas, {
+                    type: 'pie',
+                    data: {
+                        labels: modalData.labels,
+                        datasets: [{
+                            data: modalData.values,
+                            backgroundColor: palette.slice(0, modalData.labels.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    plugins: [ChartDataLabels],
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: { size: 12 },
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { size: 16, weight: 'bold' },
+                                formatter: (value, ctx) => value
+                            }
+                        },
+                        onClick: (evt, elements) => {
+                            if (elements.length > 0) {
+                                const idx = elements[0].index;
+                                const label = modalData.labels[idx];
+
+                                // Drill-down: Filter table by district
+                                const filtered = currentStatRows.filter(r => r.district === label);
+                                renderStatDetailsTable(filtered);
+
+                                // Switch back to table view
+                                modalView = 'default';
+                                content.style.display = 'block';
+                                chartContainer.style.display = 'none';
+                                chartToggle.innerText = 'View as Pie';
+
+                                // Update title temporarily to show filter
+                                document.getElementById('modalTitle').innerText += ` (${label})`;
+                            }
+                        }
+                    }
+                });
+            } else {
+                modalView = 'default';
+                content.style.display = 'block';
+                chartContainer.style.display = 'none';
+                chartToggle.innerText = 'View as Pie';
+
+                // Restore filter to all
+                renderStatDetailsTable(currentStatRows);
+
+                // Reset Title if it was appended
+                let title = document.getElementById('modalTitle').innerText;
+                if (title.includes('(')) document.getElementById('modalTitle').innerText = title.split(' (')[0];
+            }
+        }
+
+        function closeStatsModal() {
+            document.getElementById('statsModal').classList.remove('show');
+            if (modalChart) { modalChart.destroy(); modalChart = null; }
+        }
+
+        // Register the plugin globally (optional, but ensures it works)
+        Chart.register(ChartDataLabels);
+
+        let activeDashboardChart = null;
+
+        function openDashboardAnalytics(type) {
+            const modal = document.getElementById('chartModal');
+            const title = document.getElementById('chartTitle');
+            const canvas = document.getElementById('analyticsChart');
+            if (!modal || !canvas) return;
+
+            if (activeDashboardChart) activeDashboardChart.destroy();
+
+            let labels = [];
+            let dataValues = [];
+            let chartType = 'bar';
+            let chartLabel = '';
+
+            const db = window.SHEET_DATABASE || {};
+            const tabs = Object.keys(db);
+
+            // Enhanced Palette
+            const palette = [
+                '#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0',
+                '#FF5722', '#607D8B', '#795548', '#009688', '#FF9800',
+                '#03A9F4', '#8BC34A', '#CDDC39', '#FFEB3B', '#3F51B5'
+            ];
+
+            if (type === 'compliance') {
+                title.innerText = 'Global Compliance Breakdown (SITE VISIT)';
+                chartType = 'pie';
+                let compliant = 0; let nonCompliant = 0;
+                tabs.forEach(tab => {
+                    const target = window.SHEET_TARGETS[tab] || 5;
+                    const rows = db[tab] || [];
+                    const tabCustom = window.SHEET_CUSTOM_HEADERS[tab] || [];
+                    const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+                    let currentCount = 0; let hasMonth = false;
+                    const isH = (r) => {
+                        if (!r || !Array.isArray(r) || r.length === 0) return false;
+                        let v = String(r[0] || "").trim().toUpperCase();
+                        return (MONTHS.includes(v) || tabCustom.some(c => String(c).trim().toUpperCase() === v)) && (!r[1] || String(r[1]).trim() === "");
+                    };
+
+                    rows.forEach(row => {
+                        if (isH(row)) {
+                            if (hasMonth) { if (currentCount < target) nonCompliant++; else compliant++; }
+                            currentCount = 0; hasMonth = true;
+                        } else if (hasMonth && String(row[4] || "").trim() !== "") {
+                            currentCount++;
+                        }
+                    });
+                    if (hasMonth) { if (currentCount < target) nonCompliant++; else compliant++; }
+                });
+                labels = ['Compliant', 'Non-Compliant'];
+                dataValues = [compliant, nonCompliant];
+
+            } else if (type === 'seedlings') {
+                title.innerText = 'Total Seedlings by Commodity (SITE VISIT)';
+                chartType = 'pie';
+                let counts = {};
+                tabs.forEach(tab => {
+                    const tabCustom = window.SHEET_CUSTOM_HEADERS[tab] || [];
+                    const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+                    const isH = (r) => {
+                        let v = String(r[0] || "").trim().toUpperCase();
+                        return v && (MONTHS.includes(v) || tabCustom.some(c => String(c).trim().toUpperCase() === v));
+                    };
+                    (db[tab] || []).forEach(row => {
+                        if (row && !isH(row)) {
+                            let comm = String(row[12] || "Unspecified").trim();
+                            if (comm === "") comm = "Unspecified";
+                            let qty = parseCurrency(row[13]);
+                            if (qty > 0) counts[comm] = (counts[comm] || 0) + qty;
+                        }
+                    });
+                });
+                // Sort by value
+                labels = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+                dataValues = labels.map(l => counts[l]);
+
+            } else if (type === 'survival') {
+                title.innerText = 'Average Survival Rate per District (SITE VISIT)';
+                chartType = 'bar';
+                chartLabel = 'Survival %';
+                tabs.forEach(tab => {
+                    let total = 0; let count = 0;
+                    (db[tab] || []).forEach(row => {
+                        let rate = parsePercentage(row[14]);
+                        if (rate > 0) { total += rate; count++; }
+                    });
+                    labels.push(tab);
+                    dataValues.push(count > 0 ? Math.round(total / count) : 0);
+                });
+            } else if (type === 'contract') {
+                title.innerText = 'Total Contract Cost per District (SITE VISIT)';
+                chartType = 'bar';
+                chartLabel = 'Amount';
+                tabs.forEach(tab => {
+                    let total = 0;
+                    (db[tab] || []).forEach(row => {
+                        let cost = parseCurrency(row[15]);
+                        total += cost;
+                    });
+                    labels.push(tab);
+                    dataValues.push(total);
+                });
+            } else if (type.startsWith('mp_')) {
+                // MAINTENANCE & PROTECTION HANDLING
+                const dbMP = window.MAINTENANCE_PROTECTION_DATABASE || {}; // Needs to be loaded
+                const tabsMP = Object.keys(dbMP);
+
+                chartType = 'bar';
+
+                if (type === 'mp_planted') {
+                    title.innerText = 'Total Expected Planted (M&P)';
+                    chartLabel = 'Planted';
+                    tabsMP.forEach(tab => {
+                        let total = 0;
+                        (dbMP[tab] || []).forEach(row => {
+                            total += parseFloat((row[63] || "0").toString().replace(/,/g, '')) || 0;
+                        });
+                        if (total > 0) { labels.push(tab); dataValues.push(total); }
+                    });
+                } else if (type === 'mp_survived') {
+                    title.innerText = 'Total Survived (M&P)';
+                    chartLabel = 'Survived';
+                    tabsMP.forEach(tab => {
+                        let total = 0;
+                        (dbMP[tab] || []).forEach(row => { // Index 64 for Survived
+                            total += parseFloat((row[64] || "0").toString().replace(/,/g, '')) || 0;
+                        });
+                        if (total > 0) { labels.push(tab); dataValues.push(total); }
+                    });
+                } else if (type === 'mp_days') {
+                    title.innerText = 'Total Working Days (M&P)';
+                    chartLabel = 'Days';
+                    tabsMP.forEach(tab => {
+                        let total = 0; // Index 66 for Days
+                        (dbMP[tab] || []).forEach(row => {
+                            total += parseFloat((row[66] || "0").toString().replace(/,/g, '')) || 0;
+                        });
+                        if (total > 0) { labels.push(tab); dataValues.push(total); }
+                    });
+                } else if (type === 'mp_missing') {
+                    // Pie of issues
+                    title.innerText = 'Missing Inputs by District (M&P)';
+                    chartType = 'pie';
+                    tabsMP.forEach(tab => {
+                        let count = 0;
+                        (dbMP[tab] || []).forEach(row => {
+                            // Check indices 25, 37, 49
+                            const isBlockEmpty = (startIdx) => {
+                                for (let i = 0; i < 5; i++) {
+                                    if (row[startIdx + i] && row[startIdx + i].toString().trim() !== "") return false;
+                                }
+                                return true;
+                            };
+                            let active = (row[5] || row[1] || row[2]);
+                            if (active) {
+                                if (isBlockEmpty(25) || isBlockEmpty(37) || isBlockEmpty(49)) count++;
+                            }
+                        });
+                        if (count > 0) { labels.push(tab); dataValues.push(count); }
+                    });
+                }
+            }
+
+            if (labels.length === 0) { labels = ["No Data"]; dataValues = [0]; }
+
+            modal.classList.add('show');
+            const ctx = canvas.getContext('2d');
+
+            // Dataset Construction
+            let datasets = [];
+            if (chartType === 'pie') {
+                let bgColors = palette.slice(0, labels.length);
+                if (type === 'compliance') {
+                    bgColors = labels.map(l => l === 'Compliant' ? '#4CAF50' : '#F44336');
+                }
+                datasets.push({
+                    data: dataValues,
+                    backgroundColor: bgColors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 10
+                });
+            } else {
+                // For bar charts, we want each bar to have a distinct color from the palette
+                datasets.push({
+                    label: chartLabel,
+                    data: dataValues,
+                    backgroundColor: palette.slice(0, labels.length),
+                    borderRadius: 6,
+                    borderWidth: 0,
+                    maxBarThickness: 60
+                });
+            }
+
+            activeDashboardChart = new Chart(ctx, {
+                type: chartType,
+                data: { labels: labels, datasets: datasets },
+                plugins: [ChartDataLabels],
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: 20 },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            const value = dataValues[index];
+                            openDashboardDrilldown(type, label);
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: (chartType === 'pie'), // Hide legend for single-series bar charts
+                            position: 'right',
+                            labels: {
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            padding: 12,
+                            bodyFont: { size: 13 },
+                            titleFont: { size: 14, weight: 'bold' },
+                            callbacks: {
+                                label: function (context) {
+                                    let val = context.parsed.y || context.parsed || 0;
+                                    if (type === 'contract') return ' ₱' + val.toLocaleString();
+                                    if (type === 'survival') return ' ' + val + '%';
+                                    return ' ' + val.toLocaleString();
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#ffffff',
+                            textShadowColor: 'black',
+                            textShadowBlur: 4,
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value, ctx) => {
+                                if (value === 0) return '';
+                                if (type === 'contract') return '₱' + (value / 1000000).toFixed(1) + 'M'; // Abbreviate for space
+                                if (type === 'survival') return value + '%';
+                                return value.toLocaleString();
+                            },
+                            display: 'auto'
+                        }
+                    },
+                    scales: chartType === 'pie' ? {
+                        x: { display: false },
+                        y: { display: false }
+                    } : {
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: false }, // Cleaner look
+                            ticks: { font: { size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').classList.remove('show');
+            if (activeDashboardChart) { activeDashboardChart.destroy(); activeDashboardChart = null; }
+        }
+
+        // --- NEW DRILLDOWN HANDLER ---
+        function openDashboardDrilldown(metricType, categoryLabel) {
+            const modal = document.getElementById('statsModal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+            const chartToggle = document.getElementById('modalViewToggle');
+            const chartContainer = document.getElementById('modalChartContainer');
+
+            // Reset Modal State
+            content.innerHTML = '';
+            chartContainer.style.display = 'none';
+            content.style.display = 'block';
+            chartToggle.style.display = 'none'; // No pie toggle for drilldown
+
+            title.innerText = `${categoryLabel} - Details`;
+
+            const db = window.SHEET_DATABASE;
+            const tabs = Object.keys(db);
+            let rowsToDisplay = [];
+
+            // Helper to get formatted row data
+            // Row indices: 5=PO Name, 12=Commodity, 13=Seedlings, 14=Survival, 15=Contract
+
+            tabs.forEach(tab => {
+                const rows = db[tab] || [];
+                const tabCustom = window.SHEET_CUSTOM_HEADERS[tab] || [];
+                const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+                const isH = (r) => {
+                    let v = String(r[0] || "").trim().toUpperCase();
+                    return v && (MONTHS.includes(v) || tabCustom.some(c => String(c).trim().toUpperCase() === v));
+                };
+
+                rows.forEach(row => {
+                    if (!row || isH(row)) return;
+
+                    let match = false;
+                    let po = row[5] || "Unknown PO";
+                    let val = 0;
+                    let displayVal = "";
+
+                    if (metricType === 'seedlings') {
+                        let comm = String(row[12] || "Unspecified").trim();
+                        if (comm === "") comm = "Unspecified";
+                        if (comm === categoryLabel) {
+                            match = true;
+                            val = parseCurrency(row[13]);
+                            displayVal = val.toLocaleString();
+                        }
+                    }
+                    else if (metricType === 'survival' || metricType === 'contract') {
+                        // For these metrics, categories are TABS (Districts)
+                        if (tab === categoryLabel) {
+                            match = true;
+                            if (metricType === 'survival') {
+                                val = parsePercentage(row[14]);
+                                displayVal = val + '%';
+                            } else {
+                                val = parseCurrency(row[15]);
+                                displayVal = '₱' + val.toLocaleString();
+                            }
+                        }
+                    }
+                    else if (metricType === 'compliance') {
+                        // Compliance is calculated by blocks, not rows, so row-level drilldown is different.
+                        // For now, we won't implement row-level drilldown for compliance as it's block-based.
+                        // We can just return or show a message.
+                    }
+
+                    if (match && (val > 0 || displayVal !== "")) {
+                        rowsToDisplay.push({
+                            district: tab,
+                            po: po,
+                            value: displayVal,
+                            rawValue: val // for sorting
+                        });
+                    }
+                });
+            });
+
+            if (metricType === 'compliance') {
+                content.innerHTML = `<div style="padding:20px; text-align:center; color:#666;">
+                    Drill-down for compliance blocks is shown in the "Non-Compliant" card details.
+                 </div>`;
+                modal.classList.add('show');
+                return;
+            }
+
+            // Sort by value desc
+            rowsToDisplay.sort((a, b) => b.rawValue - a.rawValue);
+
+            if (rowsToDisplay.length === 0) {
+                content.innerHTML = `<div style="padding:20px; text-align:center;">No specific records found.</div>`;
+            } else {
+                let html = `<table style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
+                    <thead style="background:#f5f5f5; font-weight:700; color:#555;">
+                        <tr>
+                            <th style="padding:10px; text-align:left;">District</th>
+                            <th style="padding:10px; text-align:left;">PO / Contractor</th>
+                            <th style="padding:10px; text-align:right;">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                rowsToDisplay.forEach(item => {
+                    html += `<tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:8px 10px;">${item.district}</td>
+                        <td style="padding:8px 10px; font-weight:600;">${item.po}</td>
+                        <td style="padding:8px 10px; text-align:right;">${item.value}</td>
+                    </tr>`;
+                });
+
+                html += `</tbody></table>`;
+                content.innerHTML = html;
+            }
+
+            modal.classList.add('show');
+        }
+
+        function showDashboardFormula(type) {
+            let formulas = {
+                seedlings: "Sums all 'No of Seedlings Planted' across EVERY tab (PENRO Palawan, Coron, etc.).",
+                survival: "Calculates the average 'Survival Rate' across ALL sites in ALL tabs.",
+                contract: "Sums all 'Csd Contract Amount' from ALL tabs in the system."
+            };
+            document.getElementById('formulaTitle').innerText = (type.charAt(0).toUpperCase() + type.slice(1)) + " Formula";
+            document.getElementById('formulaText').innerText = formulas[type];
+            document.getElementById('formulaModal').classList.add('show');
+        }
+        function closeFormula() { document.getElementById('formulaModal').classList.remove('show'); }
+
+        // --- M&P STATS INTEGRATION ---
+        async function loadMPStats() {
+            try {
+                const mpDB = await DBService.get('MAINTENANCE_PROTECTION_DATABASE') || {};
+                window.MAINTENANCE_PROTECTION_DATABASE = mpDB; // Expose globally for charts
+
+                let totalPlanted = 0;
+                let totalSurvived = 0;
+                let totalDays = 0;
+                let issueCount = 0;
+
+                // Aggregate across all sheets
+                Object.values(mpDB).forEach(sheetData => {
+                    if (!sheetData) return;
+
+                    sheetData.forEach((row, rowIndex) => {
+                        if (!row || row.every(c => c === "")) return;
+
+                        const val = (idx) => {
+                            let v = parseFloat((row[idx] || "").toString().replace(/,/g, ''));
+                            return isNaN(v) ? 0 : v;
+                        };
+
+                        // NEW indices after Contract Code insertion: Planted=63, Survived=64, Days=66
+                        totalPlanted += val(63);
+                        totalSurvived += val(64);
+                        totalDays += val(66);
+
+                        // Check for missing billing (NEW indices: 25, 37, 49)
+                        let poName = row[5] ? row[5].toString().trim() : "";
+                        let penro = row[1] ? row[1].toString().trim() : "";
+                        let cenro = row[2] ? row[2].toString().trim() : "";
+                        let isRowActive = poName !== "" || penro !== "" || cenro !== "";
+
+                        if (isRowActive) {
+                            const isBlockEmpty = (startIdx) => {
+                                for (let i = 0; i < 5; i++) {
+                                    let curr = row[startIdx + i];
+                                    if (curr && curr.toString().trim() !== "") return false;
+                                }
+                                return true;
+                            };
+
+                            let b1Empty = isBlockEmpty(25);
+                            let b2Empty = isBlockEmpty(37);
+                            let b3Empty = isBlockEmpty(49);
+
+                            if (b1Empty || b2Empty || b3Empty) issueCount++;
+                        }
+                    });
+                });
+
+                // Update summary cards
+                document.getElementById('mpStatPlanted').innerText = totalPlanted.toLocaleString();
+                let avgSurvRate = 0;
+                if (totalPlanted > 0) avgSurvRate = (totalSurvived / totalPlanted) * 100;
+                document.getElementById('mpStatSurvived').innerText = `${totalSurvived.toLocaleString()} (${avgSurvRate.toFixed(1)}%)`;
+                document.getElementById('mpStatDays').innerText = totalDays.toLocaleString();
+                document.getElementById('mpStatMissing').innerText = `${issueCount} Issues`;
+                document.getElementById('mpStatMissing').style.color = issueCount > 0 ? '#c62828' : '#2e7d32';
+
+                // Update modal detail cards
+                document.getElementById('mpDetailPlanted').innerText = totalPlanted.toLocaleString();
+                document.getElementById('mpDetailSurvived').innerText = `${totalSurvived.toLocaleString()} (${avgSurvRate.toFixed(1)}%)`;
+                document.getElementById('mpDetailDays').innerText = totalDays.toLocaleString();
+                document.getElementById('mpDetailMissing').innerText = `${issueCount} Issues`;
+                document.getElementById('mpDetailMissing').style.color = issueCount > 0 ? '#c62828' : '#2e7d32';
+            } catch (e) {
+                console.error('Failed to load M&P stats:', e);
+            }
+        }
+
+        async function openMPOverview() {
+            document.getElementById('mpModal').classList.add('show');
+            await loadMPStats();
+        }
+
+        function closeMPModal() {
+            document.getElementById('mpModal').classList.remove('show');
+        }
+
+        // Load M&P stats on initial page load
+        document.addEventListener('DOMContentLoaded', async function () {
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for DB to init
+            await loadMPStats();
+        });
+    </script>
+</body>
+
+</html>

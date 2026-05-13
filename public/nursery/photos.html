@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo-Photos | NGP Palawan</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar styles moved to main.css */
+
+        .main-pane {
+            margin-left: 280px;
+            flex: 1;
+            padding: 2rem;
+            background: #f8f9fa;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .photo-card {
+            background: white;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .photo-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .photo-info {
+            padding: 1rem;
+        }
+
+        .photo-meta {
+            font-size: 0.8rem;
+            color: var(--text-medium);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 0.5rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 900px;
+            border-radius: var(--radius-md);
+            display: flex;
+            overflow: hidden;
+            height: 500px;
+        }
+
+        .modal-img {
+            width: 60%;
+            object-fit: contain;
+            background: black;
+        }
+
+        .modal-map {
+            width: 40%;
+            height: 100%;
+            position: relative;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="margin:0;">NGP Palawan</h3>
+            </div>
+            <ul style="list-style: none; padding: 1.5rem;">
+                <li style="margin-bottom: 0.5rem;"><a href="dashboard.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-th-large"></i> Dashboard</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="financial.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-coins"></i> Financial</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="site-visit.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-clipboard-check"></i> Site Visit 2025</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="maintenance-protection.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-shield-alt"></i> Maintenance & Protection</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="forest-nursery.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-warehouse"></i> Forest Nursery 2025</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="gis-map.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fas fa-map-marked-alt"></i> GIS Map</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="#"
+                        style="color: white; text-decoration: none; display: flex; gap: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;"><i
+                            class="fas fa-images"></i> Geo-Photos</a></li>
+                <li style="margin-bottom: 0.5rem;"><a href="drive-files.html"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; display: flex; gap: 10px; padding: 10px;"><i
+                            class="fab fa-google-drive"></i> Drive Files</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-pane">
+            <header style="margin-bottom: 2rem;">
+                <h2>Geotagged Photo Registry</h2>
+                <p>Validated site photos with encoded GPS metadata.</p>
+            </header>
+
+            <div class="gallery-grid">
+                <!-- Item 1 -->
+                <div class="photo-card"
+                    onclick="openModal('Site A Inspection', '9.74', '118.74', 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60')">
+                    <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+                        class="photo-img">
+                    <div class="photo-info">
+                        <div style="font-weight: 600;">Site A Inspection</div>
+                        <div class="photo-meta"><i class="fas fa-map-marker-alt"></i> Narra, Palawan</div>
+                        <div class="photo-meta"><i class="far fa-clock"></i> Oct 15, 2024</div>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="photo-card"
+                    onclick="openModal('Seedling Growth', '10.15', '119.20', 'https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60')">
+                    <img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+                        class="photo-img">
+                    <div class="photo-info">
+                        <div style="font-weight: 600;">Seedling Growth</div>
+                        <div class="photo-meta"><i class="fas fa-map-marker-alt"></i> Roxas, Palawan</div>
+                        <div class="photo-meta"><i class="far fa-clock"></i> Nov 02, 2024</div>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="photo-card"
+                    onclick="openModal('Mangrove Site', '9.50', '118.50', 'https://images.unsplash.com/photo-1588392382834-a891154bca4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60')">
+                    <img src="https://images.unsplash.com/photo-1588392382834-a891154bca4d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"
+                        class="photo-img">
+                    <div class="photo-info">
+                        <div style="font-weight: 600;">Mangrove Site</div>
+                        <div class="photo-meta"><i class="fas fa-map-marker-alt"></i> Quezon, Palawan</div>
+                        <div class="photo-meta"><i class="far fa-clock"></i> Dec 10, 2024</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="photoModal" class="modal" onclick="if(event.target === this) closeImgModal()">
+        <div class="modal-content">
+            <img id="modalImage" class="modal-img" src="">
+            <div id="modalMap" class="modal-map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let miniMap = null;
+
+        function openModal(title, lat, lng, imgSrc) {
+            document.getElementById('photoModal').style.display = 'flex';
+            document.getElementById('modalImage').src = imgSrc;
+
+            // Initialize Map if not exists
+            if (!miniMap) {
+                miniMap = L.map('modalMap');
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+            }
+
+            // Reset and Set View
+            miniMap.setView([lat, lng], 12);
+
+            // Clear previous markers
+            miniMap.eachLayer((layer) => {
+                if (layer instanceof L.Marker) miniMap.removeLayer(layer);
+            });
+
+            // Add new marker
+            L.marker([lat, lng]).addTo(miniMap)
+                .bindPopup(`<b>${title}</b><br>Lat: ${lat}, Lng: ${lng}`)
+                .openPopup();
+
+            // Force map resize check (Leaflet quirk in modals)
+            setTimeout(() => miniMap.invalidateSize(), 100);
+        }
+
+        function closeImgModal() {
+            document.getElementById('photoModal').style.display = 'none';
+
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // RDATS Collection
+    match /rdats/{document=**} {
+      allow read: if true; // Publicly viewable
+      allow write: if true; // Temporary: Allow write for admin (can restrict later with auth)
+    }
+
+    // Posts Collection (Feed)
+    match /posts/{document=**} {
+      allow read: if true; // Publicly viewable
+      allow write: if true; // Temporary: Allow write for admin
+    }
+    
+    // RDATS Pending Submissions
+    match /rdats_pending/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Game Extension Collections
+    match /game_sessions/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /players/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Default fallback
+    match /{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

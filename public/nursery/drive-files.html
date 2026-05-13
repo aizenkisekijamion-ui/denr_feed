@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive Files | NGP Palawan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles/main.css">
+
+    <!-- Google API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="scripts/config.js"></script>
+
+    <style>
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-pane {
+            flex: 1;
+            padding: 2rem;
+            background-color: #f8f9fa;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .file-card {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+
+        .file-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .file-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-medium);
+        }
+
+        .file-icon.folder {
+            color: #FFC107;
+        }
+
+        .file-icon.pdf {
+            color: #D32F2F;
+        }
+
+        .file-icon.sheet {
+            color: #388E3C;
+        }
+
+        .file-icon.doc {
+            color: #1976D2;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            word-break: break-all;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .setup-guide {
+            max-width: 600px;
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Quick Sidebar Navigation (Simplified for this page) -->
+        <aside class="sidebar">
+            <div class="sidebar-header"><i class="fas fa-tree fa-lg"></i>
+                <div>
+                    <h3 style="color: white; font-size: 1.1rem; margin:0;">NGP Palawan</h3><span
+                        style="font-size: 0.75rem; opacity: 0.7;">Admin Console</span>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-th-large"></i>
+                        Dashboard</a></li>
+                <li class="nav-item"><a href="financial.html" class="nav-link"><i class="fas fa-coins"></i>
+                        Financial</a></li>
+                <li class="nav-item"><a href="site-visit.html" class="nav-link"><i class="fas fa-clipboard-check"></i>
+                        Site Visit 2025</a></li>
+
+                <li class="nav-item"><a href="maintenance-protection.html" class="nav-link"><i
+                            class="fas fa-shield-alt"></i>
+                        Maintenance & Protection</a></li>
+                <li class="nav-item"><a href="forest-nursery.html" class="nav-link"><i class="fas fa-warehouse"></i>
+                        Forest Nursery 2025</a></li>
+                <li class="nav-item"><a href="gis-map.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> GIS
+                        Map</a></li>
+                <li class="nav-item"><a href="photos.html" class="nav-link"><i class="fas fa-images"></i> Geo-Photos</a>
+                </li>
+                <li class="nav-item"><a href="drive-files.html" class="nav-link active"><i
+                            class="fab fa-google-drive"></i>
+                        Drive Files</a></li>
+            </ul>
+            <div style="padding: 1.5rem; margin-top: auto;"><a href="index.html" class="nav-link"
+                    style="color: #ff8a80;"><i class="fas fa-sign-out-alt"></i> Logout</a></div>
+        </aside>
+
+        <main class="main-pane">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>NGP Documents Repository</h2>
+                <div>
+                    <button id="authorize_button" class="btn btn-primary" style="display: none;">
+                        <i class="fab fa-google"></i> Connect Account
+                    </button>
+                    <button id="signout_button" class="btn btn-outline" style="display: none;">
+                        Sign Out
+                    </button>
+                </div>
+            </header>
+
+            <div id="content_area">
+                <!-- Files will be injected here -->
+                <div style="text-align: center; color: var(--text-medium); margin-top: 3rem;">
+                    <i class="fas fa-cloud-upload-alt fa-3x" style="color: #ddd;"></i>
+                    <p style="margin-top: 1rem;">Initializing connection to Drive API...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Setup Guide Modal (Shown if Config is missing) -->
+    <div id="setup_modal" class="auth-overlay" style="display: none;">
+        <div class="setup-guide">
+            <h2 style="color: var(--primary-dark);"><i class="fas fa-cogs"></i> System Configuration Required</h2>
+            <p>To connect the <strong>Real Google Drive</strong>, you need to provide API credentials. This is a
+                security requirement from Google.</p>
+
+            <div style="background: #f1f8e9; padding: 1rem; margin: 1.5rem 0; border-radius: 4px; font-size: 0.9rem;">
+                <strong>Instructions for IT Admin:</strong>
+                <ol style="margin-left: 1.2rem; margin-top: 0.5rem;">
+                    <li>Go to Google Cloud Console and create a project.</li>
+                    <li>Enable the <strong>Google Drive API</strong>.</li>
+                    <li>Create an <strong>API Key</strong> and <strong>OAuth Client ID</strong>.</li>
+                    <li>Open <code>scripts/config.js</code> in the project folder and paste them there.</li>
+                </ol>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn btn-outline" onclick="loadMockMode()">Use Mock Data (Demo)</button>
+                <button class="btn btn-primary"
+                    onclick="window.open('https://console.cloud.google.com/', '_blank')">Open Google Console</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const authorizeButton = document.getElementById('authorize_button');
+        const signoutButton = document.getElementById('signout_button');
+        const contentArea = document.getElementById('content_area');
+        const setupModal = document.getElementById('setup_modal');
+
+        // 1. Check for Configuration
+        function checkConfig() {
+            if (CONFIG.GOOGLE_CLIENT_ID.includes('YOUR_CLIENT_ID') || CONFIG.GOOGLE_API_KEY.includes('YOUR_API_KEY')) {
+                setupModal.style.display = 'flex';
+            } else {
+                handleClientLoad();
+            }
+        }
+
+        // 2. Real API Logic
+        function handleClientLoad() {
+            gapi.load('client:auth2', initClient);
+        }
+
+        function initClient() {
+            gapi.client.init({
+                apiKey: CONFIG.GOOGLE_API_KEY,
+                clientId: CONFIG.GOOGLE_CLIENT_ID,
+                discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+                scope: CONFIG.SCOPES
+            }).then(function () {
+                // Listen for sign-in state changes.
+                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+                // Handle the initial sign-in state.
+                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+
+                authorizeButton.onclick = handleAuthClick;
+                signoutButton.onclick = handleSignoutClick;
+            }, function (error) {
+                contentArea.innerHTML = `<p style='color:red'>Error initializing Google API: ${JSON.stringify(error, null, 2)}</p>`;
+            });
+        }
+
+        function updateSigninStatus(isSignedIn) {
+            if (isSignedIn) {
+                authorizeButton.style.display = 'none';
+                signoutButton.style.display = 'block';
+                listFiles();
+            } else {
+                authorizeButton.style.display = 'block';
+                signoutButton.style.display = 'none';
+                contentArea.innerHTML = '<p>Please sign in to view NGP documents.</p>';
+            }
+        }
+
+        function handleAuthClick(event) {
+            gapi.auth2.getAuthInstance().signIn();
+        }
+
+        function handleSignoutClick(event) {
+            gapi.auth2.getAuthInstance().signOut();
+        }
+
+        function listFiles() {
+            contentArea.innerHTML = '<p>Loading files...</p>';
+            gapi.client.drive.files.list({
+                'pageSize': 20,
+                'fields': "nextPageToken, files(id, name, mimeType, webViewLink, iconLink)",
+                'q': "trashed = false" // Can filter by folder here
+            }).then(function (response) {
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    renderFiles(files);
+                } else {
+                    contentArea.innerHTML = '<p>No files found.</p>';
+                }
+            });
+        }
+
+        // 3. Mock Data Logic (Fallback)
+        function loadMockMode() {
+            setupModal.style.display = 'none';
+            authorizeButton.style.display = 'none';
+            signoutButton.style.display = 'none';
+
+            const mockFiles = [
+                { name: 'NGP Financial Plan 2025', mimeType: 'application/vnd.google-apps.spreadsheet' },
+                { name: 'District 1 Shapefiles', mimeType: 'application/vnd.google-apps.folder' },
+                { name: 'Q1 Accomplishment Report', mimeType: 'application/pdf' },
+                { name: 'Site Photos - Narra', mimeType: 'application/vnd.google-apps.folder' },
+                { name: 'Memo Circular 2025-01', mimeType: 'application/vnd.google-apps.document' },
+                { name: 'Validation Checklist', mimeType: 'application/vnd.google-apps.document' },
+            ];
+            renderFiles(mockFiles);
+        }
+
+        // 4. Shared Render Logic
+        function renderFiles(files) {
+            let html = '<div class="file-grid">';
+            files.forEach(file => {
+                let iconClass = 'file';
+                if (file.mimeType.includes('folder')) iconClass = 'folder';
+                else if (file.mimeType.includes('spreadsheet')) iconClass = 'sheet';
+                else if (file.mimeType.includes('pdf')) iconClass = 'pdf';
+                else if (file.mimeType.includes('document')) iconClass = 'doc';
+
+                let iconHtml = `<i class="fas fa-file-alt file-icon"></i>`;
+                if (iconClass === 'folder') iconHtml = `<i class="fas fa-folder file-icon folder"></i>`;
+                if (iconClass === 'sheet') iconHtml = `<i class="fas fa-file-excel file-icon sheet"></i>`;
+                if (iconClass === 'pdf') iconHtml = `<i class="fas fa-file-pdf file-icon pdf"></i>`;
+                if (iconClass === 'doc') iconHtml = `<i class="fas fa-file-word file-icon doc"></i>`;
+
+                html += `
+                <div class="file-card" onclick="window.open('${file.webViewLink || '#'}', '_blank')">
+                    ${iconHtml}
+                    <div class="file-name">${file.name}</div>
+                </div>
+            `;
+            });
+            html += '</div>';
+            contentArea.innerHTML = html;
+        }
+
+        // Start
+        checkConfig();
+
+    </script>
+</body>
+
+</html>
